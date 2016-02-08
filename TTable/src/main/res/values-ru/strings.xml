@@ -1,0 +1,33 @@
+﻿ <resources>
+    <string name="app_name">Расписание</string>
+    <string name="hello_world">Привет, мир!</string>
+    <string name="action_settings">Установки</string>
+    <string name="str_downloading">Скачивание</string>
+    <string name="str_select_faculty">Выберите институт</string>
+    <string name="str_select_group">Выберите группу</string>
+    <string name="str_ttable_week">Расписание на неделю</string>
+
+    <string name="str_day_mo">ПН</string>
+    <string name="str_day_tu">ВТ</string>
+    <string name="str_day_we">СР</string>
+    <string name="str_day_th">ЧТ</string>
+    <string name="str_day_fr">ПТ</string>
+    <string name="str_day_sa">СБ</string>
+
+    <string name="str_timetable">Расписание</string>
+    <string name="str_day_monday">Понедельник</string>
+    <string name="str_day_tuesday">Вторник</string>
+    <string name="str_day_wednesday">Среда</string>
+    <string name="str_day_thursday">Четверг</string>
+    <string name="str_day_friday">Пятница</string>
+    <string name="str_day_saturday">Суббота</string>
+
+    <string name="str_turn_on_internet">Включите интернет</string>
+    <string name="str_select_stu_teacher">Выберите тип списка: группы студентов или преподаватели</string>
+    <string name="str_students">Студенты</string>
+    <string name="str_lecturers">Преподаватели</string>
+    <string name="str_select_lecturer">Выберите преподавателя</string>
+    <string name="str_lecturer_not_found">Преподаватель не найден на сайте университета</string>
+
+
+ </resources>

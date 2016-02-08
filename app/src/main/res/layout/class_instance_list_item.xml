@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <Spinner
+        android:layout_width="0dp"
+        android:layout_weight=".5"
+        android:layout_height="wrap_content"
+        android:id="@+id/new_week_day"
+        android:textSize="12sp"
+        android:layout_gravity="center_horizontal"
+        android:spinnerMode="dropdown" />
+
+    <Spinner
+        android:layout_width="0dp"
+        android:layout_weight=".5"
+        android:layout_height="wrap_content"
+        android:id="@+id/new_class_time"
+        android:layout_gravity="center_horizontal"
+        android:spinnerMode="dialog" />
+</LinearLayout>

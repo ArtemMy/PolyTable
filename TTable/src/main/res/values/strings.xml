@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">TTable</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="str_downloading">Downloading</string>
+    <string name="str_select_faculty">Select faculty</string>
+    <string name="str_select_group">Select group</string>
+    <string name="str_ttable_week">Week time table</string>
+
+    <string name="str_day_mo">MO</string>
+    <string name="str_day_tu">TU</string>
+    <string name="str_day_we">WE</string>
+    <string name="str_day_th">TH</string>
+    <string name="str_day_fr">FR</string>
+    <string name="str_day_sa">SA</string>
+
+    <string name="str_timetable">Time table</string>
+    <string name="str_day_monday">Monday</string>
+    <string name="str_day_tuesday">Tuesday</string>
+    <string name="str_day_wednesday">Wednesday</string>
+    <string name="str_day_thursday">Thursday</string>
+    <string name="str_day_friday">Friday</string>
+    <string name="str_day_saturday">Saturday</string>
+
+    <string name="str_turn_on_internet">Turn on internet</string>
+
+    <string name="str_select_stu_teacher">Select required list: student groups or teachers</string>
+    <string name="str_students">Students</string>
+    <string name="str_lecturers">Lecturers</string>
+    <string name="str_select_lecturer">Select lecturer</string>
+    <string name="str_lecturer_not_found">Lecturer not found</string>
+
+
+</resources>

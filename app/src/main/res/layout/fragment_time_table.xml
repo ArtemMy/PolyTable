@@ -1,0 +1,14 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="edu.amd.spbstu.polystudenttimetable.TimeTableFragment">
+
+    <com.wefika.calendar.CollapseCalendarView
+        android:id="@+id/day_table_calendar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <include layout="@layout/daytable" />
+
+</LinearLayout>

@@ -1,0 +1,36 @@
+<resources>
+    <string name="app_name">PolyStudent Timetable</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+
+    <string name="header_text">days till the exams</string>
+
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="placeholder_downloading">Downloading..</string>
+
+    <string name="placeholder_turn_on_internet">Turn on the internet</string>
+
+    <string name="sunday">For crying out loud, it\'s sunday</string>
+
+    <string-array name="week_day_array">
+        <item>Monday</item>
+        <item>Tuesday</item>
+        <item>Wednesday</item>
+        <item>Thursday</item>
+        <item>Friday</item>
+        <item>Saturday</item>
+    </string-array>
+
+    <string-array name="class_time_array">
+        <item>08:00 - 09:30</item>
+        <item>10:00 - 11:30</item>
+        <item>12:00 - 13:30</item>
+        <item>14:00 - 15:30</item>
+        <item>16:00 - 17:30</item>
+    </string-array>
+
+</resources>
