@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -15,8 +16,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.wefika.calendar.CollapseCalendarView;
@@ -131,37 +134,34 @@ public class TimeTableFragment extends Fragment
         for (int i = w * 5; i < (w + 1) * 5; i++) {
             Lesson lesson = StaticStorage.m_listLessons.get(i);
             if(lesson.m_subject.isEmpty()) {
+                /*
                 int j = 1;
                 while (i + 1 < (w + 1) * 5 && StaticStorage.m_listLessons.get(i + 1).m_subject.isEmpty()) {
                     j++;
                     i++;
                 }
                     Log.d("init", String.valueOf(j));
-//                View v = ltInflater.inflate(R.layout.emplyclass, dayTableLayout, true);
-//                CardView.LayoutParams lp = new CardView.LayoutParams(dayTableLayout.getLayoutParams().width, 80 * j);
-//                v.setLayoutParams(lp);
-//                v.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, j));
-//                v.requestLayout();
+               */
             }
             else {
                 SingleClassView scv = new SingleClassView(getActivity());
-                dayTableLayout.addView(scv);
                 scv.init(lesson);
-                scv.setOnClickListener(new View.OnClickListener() {
+                scv.setOnClickListener(new CardView.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        FragmentManager fragmentManager = getFragmentManager();
+                        Log.d("init", "click");
+                        FragmentManager fragmentManager = getActivity().getFragmentManager();
                         FragmentTransaction transaction = fragmentManager.beginTransaction();
                         transaction.replace(R.id.container, new DetailedClassFragment());
                         transaction.addToBackStack(null);
                         transaction.commit();
                     }
                 });
+                dayTableLayout.addView(scv);
 //                registerForContextMenu(scv);
             }
         }
     }
-/*
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         MenuInflater inflater = getActivity().getMenuInflater();
@@ -171,10 +171,10 @@ public class TimeTableFragment extends Fragment
 //        mClassViews.
     }
 
+    /*
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         ContextMenu.ContextMenuInfo info = (ContextMenu.ContextMenuInfo) item.getMenuInfo();
-        Log.d("init", info.t);
         switch (item.getItemId()) {
             case R.id.menu_class_cancel:
                 ((SingleClassView) info.targetView).setCanceled(!((SingleClassView) info.targetView).getCanceled());
@@ -189,14 +189,13 @@ public class TimeTableFragment extends Fragment
                 return super.onContextItemSelected(item);
         }
     }
-*/
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
             mListener.onFragmentInteraction(uri);
         }
     }
-
+*/
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -238,4 +237,80 @@ public class TimeTableFragment extends Fragment
         if(mOnCreateCalled)
            initTable(getView());
     }
+/*
+    public class MySimpleArrayAdapter extends ArrayAdapter<Lesson> {
+        private final Context context;
+        private final Lesson[] values;
+
+        public MySimpleArrayAdapter(Context context, Lesson[] values) {
+            super(context, R.layout.singleclass, values);
+            this.context = context;
+            this.values = values;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            LayoutInflater inflater = (LayoutInflater) context
+                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            View rowView = inflater.inflate(R.layout.singleclass, parent, false);
+            mTime1 = (TextView) findViewById(R.id.time1);
+            mTime2 = (TextView) findViewById(R.id.time2);
+            mName =  (TextView) findViewById(R.id.class_name);
+            mWhere = (TextView) findViewById(R.id.where);
+            TextView textView = (TextView) rowView.findViewById(R.id.label);
+            ImageView imageView = (ImageView) rowView.findViewById(R.id.icon);
+            textView.setText(values[position]);
+            // Change the icon for Windows and iPhone
+            String s = values[position];
+            if (s.startsWith("Windows7") || s.startsWith("iPhone")
+                    || s.startsWith("Solaris")) {
+                imageView.setImageResource(R.drawable.no);
+            } else {
+                imageView.setImageResource(R.drawable.ok);
+            }
+
+            return rowView;
+        }
+    }
+
+    public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHolder> {
+        private String[] dataSource;
+        public RecyclerAdapter(String[] dataArgs){
+            dataSource = dataArgs;
+
+        }
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            // create a new view
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.item, parent, false);
+
+            ViewHolder viewHolder = new ViewHolder(view);
+            return viewHolder;
+
+
+        }
+
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            holder.textView.setText(dataSource[position]);
+        }
+
+        @Override
+        public int getItemCount() {
+            return dataSource.length;
+        }
+
+        public static class ViewHolder extends RecyclerView.ViewHolder{
+            protected TextView textView;
+            public ViewHolder(View itemView) {
+                super(itemView);
+                textView =  (TextView) itemView.findViewById(R.id.list_item);
+
+            }
+
+
+        }
+    }
+    */
 }

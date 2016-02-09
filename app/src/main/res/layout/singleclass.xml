@@ -85,6 +85,7 @@
             android:layout_margin="3dp"
             android:visibility="visible"
             android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
             android:alpha="0.15"
             android:src="@android:drawable/stat_sys_warning"
             android:tint="@color/yellow"/>

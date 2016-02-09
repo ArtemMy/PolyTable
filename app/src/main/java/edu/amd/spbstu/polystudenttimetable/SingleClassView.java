@@ -5,6 +5,7 @@ import android.support.v7.widget.CardView;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -44,6 +45,10 @@ public class SingleClassView extends CardView{
         mTime2 = (TextView) findViewById(R.id.time2);
         mName =  (TextView) findViewById(R.id.class_name);
         mWhere = (TextView) findViewById(R.id.where);
+        mIsHomework = lesson.m_isHomework;
+        mIsImportant = lesson.m_isImportant;
+        mIsCanceled = lesson.m_isCanceled;
+
         mHomework = (ImageView) findViewById(R.id.homework);
         mCanceled = (ImageView) findViewById(R.id.canceled);
         mImportant = (ImageView) findViewById(R.id.important);
@@ -62,17 +67,32 @@ public class SingleClassView extends CardView{
         switch(lesson.m_type)
         {
             case 0:
-                class_type = "Практика ";
+                class_type = " (практика)";
                 break;
             case 1:
-                class_type = "Лабораторные: ";
+                class_type = " (лабораторные)";
                 break;
             case 2:
-                class_type = "Теория: ";
+                class_type = " (теория)";
                 break;
         }
 
-        mName.setText(class_type + lesson.m_subject);
+        mName.setText(lesson.m_subject + class_type);
+
+        mImportant.setOnClickListener(new ImageView.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d("init", "click");
+                setImportant(!getImportant());
+            }
+        });
+        mHomework.setOnClickListener(new ImageView.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d("init", "click");
+                setHomework(!getHomework());
+            }
+        });
     }
 
     boolean getHomework () {
