@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/CollapseCalendarView/CollapseCalendarView.iml" filepath="$PROJECT_DIR$/CollapseCalendarView/CollapseCalendarView.iml" />
-      <module fileurl="file://$PROJECT_DIR$/PolyStudentTimetable.iml" filepath="$PROJECT_DIR$/PolyStudentTimetable.iml" />
+      <module fileurl="file://$PROJECT_DIR$/PolyTable.iml" filepath="$PROJECT_DIR$/PolyTable.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

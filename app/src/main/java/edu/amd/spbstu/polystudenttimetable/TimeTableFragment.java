@@ -237,42 +237,8 @@ public class TimeTableFragment extends Fragment
         if(mOnCreateCalled)
            initTable(getView());
     }
+
 /*
-    public class MySimpleArrayAdapter extends ArrayAdapter<Lesson> {
-        private final Context context;
-        private final Lesson[] values;
-
-        public MySimpleArrayAdapter(Context context, Lesson[] values) {
-            super(context, R.layout.singleclass, values);
-            this.context = context;
-            this.values = values;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            LayoutInflater inflater = (LayoutInflater) context
-                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            View rowView = inflater.inflate(R.layout.singleclass, parent, false);
-            mTime1 = (TextView) findViewById(R.id.time1);
-            mTime2 = (TextView) findViewById(R.id.time2);
-            mName =  (TextView) findViewById(R.id.class_name);
-            mWhere = (TextView) findViewById(R.id.where);
-            TextView textView = (TextView) rowView.findViewById(R.id.label);
-            ImageView imageView = (ImageView) rowView.findViewById(R.id.icon);
-            textView.setText(values[position]);
-            // Change the icon for Windows and iPhone
-            String s = values[position];
-            if (s.startsWith("Windows7") || s.startsWith("iPhone")
-                    || s.startsWith("Solaris")) {
-                imageView.setImageResource(R.drawable.no);
-            } else {
-                imageView.setImageResource(R.drawable.ok);
-            }
-
-            return rowView;
-        }
-    }
-
     public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHolder> {
         private String[] dataSource;
         public RecyclerAdapter(String[] dataArgs){
