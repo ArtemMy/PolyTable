@@ -36,12 +36,12 @@ import org.joda.time.Days;
 import org.joda.time.LocalDate;
 
 public class MainNavigationDrawer extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener,
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+        implements NavigationView.OnNavigationItemSelectedListener {
+//       GoogleApiClient.ConnectionCallbacks,
+//        GoogleApiClient.OnConnectionFailedListener {
 
-    DBHelper dbHelper;
-    GoogleApiClient mGoogleApiClient;
+//    DBHelper dbHelper;
+//    GoogleApiClient mGoogleApiClient;
 
     private static final int REQUEST_CODE_RESOLUTION = 3;
 
@@ -71,14 +71,14 @@ public class MainNavigationDrawer extends AppCompatActivity
 
 //        dbHelper = new DBHelper(this);
 
-
+/*
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Drive.API)
                 .addScope(Drive.SCOPE_FILE)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
-
+*/
         StaticStorage.clear();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
@@ -93,6 +93,7 @@ public class MainNavigationDrawer extends AppCompatActivity
 
         navigationView.setNavigationItemSelectedListener(this);
 
+        Log.d("init", "begin transaction");
         getFragmentManager().beginTransaction()
                     .replace(R.id.container, new TimeTableFragment())
                     .commit();
@@ -100,9 +101,11 @@ public class MainNavigationDrawer extends AppCompatActivity
 
     @Override
     protected void onStart() {
+        Log.d("init", "onStart");
         super.onStart();
-        mGoogleApiClient.connect();
+//        mGoogleApiClient.connect();
     }
+    /*
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
         if (connectionResult.hasResolution()) {
@@ -134,6 +137,7 @@ public class MainNavigationDrawer extends AppCompatActivity
                 break;
         }
     }
+    */
 
     @Override
     public void onBackPressed() {
@@ -209,6 +213,7 @@ public class MainNavigationDrawer extends AppCompatActivity
         return Days.daysBetween(LocalDate.now(), exam1).getDays();
     }
 
+    /*
     // database
 
     class DBHelper extends SQLiteOpenHelper {
@@ -233,6 +238,7 @@ public class MainNavigationDrawer extends AppCompatActivity
 
         }
     }
+    */
 
     /*
      * A placeholder fragment containing a simple view.

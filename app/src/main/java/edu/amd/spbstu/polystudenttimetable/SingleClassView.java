@@ -17,6 +17,8 @@ public class SingleClassView extends CardView{
     private TextView mTime1, mTime2, mWhere, mName;
     private ImageView mHomework, mCanceled, mImportant;
     private boolean mIsCanceled, mIsImportant, mIsHomework;
+    private Lesson mLesson;
+
     public SingleClassView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -52,6 +54,8 @@ public class SingleClassView extends CardView{
         mHomework = (ImageView) findViewById(R.id.homework);
         mCanceled = (ImageView) findViewById(R.id.canceled);
         mImportant = (ImageView) findViewById(R.id.important);
+
+        mLesson = lesson;
 
         Log.d("init", lesson.m_timeStart + lesson.m_timeEnd + lesson.m_buildingName + ", ауд. " + lesson.m_roomName + String.valueOf(lesson.m_type) + ": " + lesson.m_subject);
 
@@ -93,6 +97,21 @@ public class SingleClassView extends CardView{
                 setHomework(!getHomework());
             }
         });
+        this.setClickable(true);
+        this.setOnClickListener(new CardView.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d("init", "it clicked!");
+                        /*
+                        FragmentManager fragmentManager = getActivity().getFragmentManager();
+                        FragmentTransaction transaction = fragmentManager.beginTransaction();
+                        transaction.replace(R.id.container, DetailedClassFragment.newInstance(((SingleClassView)view).getLesson()));
+                        transaction.addToBackStack(null);
+                        transaction.commit();
+                        */
+            }
+        });
+
     }
 
     boolean getHomework () {
@@ -115,6 +134,10 @@ public class SingleClassView extends CardView{
 
     boolean getCanceled () {
         return mIsCanceled;
+    }
+
+    Lesson getLesson () {
+        return mLesson;
     }
 
     void setCanceled (boolean c) {
