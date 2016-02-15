@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import android.os.Parcel;
 import java.util.ArrayList;
 
 
@@ -27,7 +28,7 @@ public class DetailedClassFragment extends Fragment {
     private static final String ARG_PARAM = "param1";
 
     // TODO: Rename and change types of parameters
-    private Lesson mParam1;
+    private Lesson mLesson;
     private ListView classesList = null;
     private ArrayAdapter<String> cAdapter = null;
     private ArrayList<String> classes = null;
@@ -42,8 +43,7 @@ public class DetailedClassFragment extends Fragment {
     public static DetailedClassFragment newInstance(Lesson param) {
         DetailedClassFragment fragment = new DetailedClassFragment();
         Bundle args = new Bundle();
-        args.
-        args.putString(ARG_PARAM, param);
+        args.putParcelable("parsedLesson", param);
         fragment.setArguments(args);
         return fragment;
     }
@@ -56,7 +56,7 @@ public class DetailedClassFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM);
+            mLesson = (Lesson)savedInstanceState.getParcelable("parsedLesson");
         }
     }
 

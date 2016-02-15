@@ -146,17 +146,6 @@ public class TimeTableFragment extends Fragment
             else {
                 SingleClassView scv = new SingleClassView(getActivity());
                 scv.init(lesson);
-                scv.setOnClickListener(new CardView.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        Log.d("init", "click");
-                        FragmentManager fragmentManager = getActivity().getFragmentManager();
-                        FragmentTransaction transaction = fragmentManager.beginTransaction();
-                        transaction.replace(R.id.container, new DetailedClassFragment());
-                        transaction.addToBackStack(null);
-                        transaction.commit();
-                    }
-                });
                 dayTableLayout.addView(scv);
 //                registerForContextMenu(scv);
             }
