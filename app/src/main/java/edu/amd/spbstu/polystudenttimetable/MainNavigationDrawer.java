@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -36,7 +37,10 @@ import org.joda.time.Days;
 import org.joda.time.LocalDate;
 
 public class MainNavigationDrawer extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener,
+        DetailedClassFragment.OnFragmentInteractionListener,
+        TimeTableFragment.OnFragmentInteractionListener,
+        SearchFragment.OnFragmentInteractionListener {
 //       GoogleApiClient.ConnectionCallbacks,
 //        GoogleApiClient.OnConnectionFailedListener {
 
@@ -44,6 +48,11 @@ public class MainNavigationDrawer extends AppCompatActivity
 //    GoogleApiClient mGoogleApiClient;
 
     private static final int REQUEST_CODE_RESOLUTION = 3;
+
+    public void onFragmentInteraction(Uri uri)
+    {
+        return;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -213,6 +222,12 @@ public class MainNavigationDrawer extends AppCompatActivity
         return Days.daysBetween(LocalDate.now(), exam1).getDays();
     }
 
+    public void switchContent(Fragment fragment) {
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        ft.replace(R.id.container, fragment, fragment.toString());
+        ft.addToBackStack(null);
+        ft.commit();
+    }
     /*
     // database
 

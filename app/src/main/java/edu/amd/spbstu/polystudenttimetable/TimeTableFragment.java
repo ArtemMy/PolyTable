@@ -7,6 +7,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -29,6 +31,7 @@ import org.joda.time.LocalDate;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -53,6 +56,7 @@ public class TimeTableFragment extends Fragment
     private static CalendarManager calendarManager;
     private static CollapseCalendarView calendarView;
     private OnFragmentInteractionListener mListener;
+    RecyclerView daytableView;
 
     private boolean mOnCreateCalled = false;
     /**
@@ -99,6 +103,7 @@ public class TimeTableFragment extends Fragment
                 /* calendar init */
         calendarManager = new CalendarManager(LocalDate.now(), CalendarManager.State.MONTH, LocalDate.now(), LocalDate.now().plusYears(1));
 //        calendarManager.toggleView();
+        registerForContextMenu(daytableView);
     }
 
     @Override
@@ -118,12 +123,6 @@ public class TimeTableFragment extends Fragment
 
     private void initTable (View view)
     {
-        /* day init */
-        LinearLayout dayTableLayout = (LinearLayout) view.findViewById(R.id.day_table);
-
-        dayTableLayout.removeAllViews();
-        LayoutInflater ltInflater = getActivity().getLayoutInflater();
-
         int w = calendarManager.getSelectedDay().getDayOfWeek() - 1;
 
         if(w == 6) {
@@ -131,26 +130,30 @@ public class TimeTableFragment extends Fragment
         }
         Log.d("init", String.valueOf(StaticStorage.m_isInitialized));
 
+        List<Lesson> allClasses = new ArrayList<Lesson>();
         for (int i = w * 5; i < (w + 1) * 5; i++) {
             Lesson lesson = StaticStorage.m_listLessons.get(i);
-            if(lesson.m_subject.isEmpty()) {
+            if(!lesson.m_subject.isEmpty()) {
+                allClasses.add(lesson);
                 /*
-                int j = 1;
-                while (i + 1 < (w + 1) * 5 && StaticStorage.m_listLessons.get(i + 1).m_subject.isEmpty()) {
-                    j++;
-                    i++;
-                }
-                    Log.d("init", String.valueOf(j));
-               */
-            }
-            else {
                 SingleClassView scv = new SingleClassView(getActivity());
                 scv.init(lesson);
                 dayTableLayout.addView(scv);
-//                registerForContextMenu(scv);
+                registerForContextMenu(scv);
+                 */
             }
         }
+        daytableView = (RecyclerView)view.findViewById(R.id.daytable_view);
+        daytableView.setItemAnimator(new DefaultItemAnimator());
+        daytableView.setHasFixedSize(true);
+
+        RecyclerView.LayoutManager layoutManager=new LinearLayoutManager(getActivity());
+        daytableView.setLayoutManager(layoutManager);
+
+        RecyclerView.Adapter adapter = new DayTableAdapter(allClasses);
+        daytableView.setAdapter(adapter);
     }
+
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         MenuInflater inflater = getActivity().getMenuInflater();
@@ -226,46 +229,4 @@ public class TimeTableFragment extends Fragment
         if(mOnCreateCalled)
            initTable(getView());
     }
-
-/*
-    public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ViewHolder> {
-        private String[] dataSource;
-        public RecyclerAdapter(String[] dataArgs){
-            dataSource = dataArgs;
-
-        }
-        @Override
-        public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            // create a new view
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item, parent, false);
-
-            ViewHolder viewHolder = new ViewHolder(view);
-            return viewHolder;
-
-
-        }
-
-        @Override
-        public void onBindViewHolder(ViewHolder holder, int position) {
-            holder.textView.setText(dataSource[position]);
-        }
-
-        @Override
-        public int getItemCount() {
-            return dataSource.length;
-        }
-
-        public static class ViewHolder extends RecyclerView.ViewHolder{
-            protected TextView textView;
-            public ViewHolder(View itemView) {
-                super(itemView);
-                textView =  (TextView) itemView.findViewById(R.id.list_item);
-
-            }
-
-
-        }
-    }
-    */
 }

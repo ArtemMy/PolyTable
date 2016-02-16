@@ -25,6 +25,11 @@
         <item>Saturday</item>
     </string-array>
 
+    <string name="lesson_menu_title">Edit specific class</string>
+    <string name="lesson_menu_imp">Mark as important</string>
+    <string name="lesson_menu_hw">Edit homework</string>
+    <string name="lesson_menu_canc">Cancel class</string>
+
     <string-array name="class_time_array">
         <item>08:00 - 09:30</item>
         <item>10:00 - 11:30</item>
