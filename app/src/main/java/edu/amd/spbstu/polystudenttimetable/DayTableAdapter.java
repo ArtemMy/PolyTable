@@ -16,15 +16,26 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.joda.time.LocalDate;
+
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by artem on 2/16/16.
  */
 public class DayTableAdapter extends RecyclerView.Adapter<DayTableAdapter.MyViewHolder> {
-    List<Lesson> list;
-    public DayTableAdapter(List<Lesson> list){
-        this.list=list;
+    List<RegLessonInstance> list;
+    LocalDate week;
+    int position;
+    RegLessonInstance currentLesson;
+
+    public DayTableAdapter(List<RegLessonInstance> list, LocalDate week, RegLessonInstance currentLesson){
+        this.list = list;
+        this.week = week;
+        this.position = 0;
+        this.currentLesson = currentLesson;
     }
 
     public MyViewHolder getCustomHolder(View v) {
@@ -32,39 +43,36 @@ public class DayTableAdapter extends RecyclerView.Adapter<DayTableAdapter.MyView
             @Override
             public void onClick(View v) {
                 int item = this.getAdapterPosition();
-                Lesson lesson = list.get(item);
+                RegLessonInstance lesson = list.get(item);
                 switch(v.getId()){
                     case R.id.homework:
                         Log.d("init", "mHomework");
-                        lesson.m_isHomework = !lesson.m_isHomework;
-                        v.setAlpha(lesson.m_isHomework ? 1.0f : 0.15f);
                         break;
                     case R.id.important:
                         Log.d("init", "mImportant");
-                        lesson.m_isImportant = !lesson.m_isImportant;
-                        v.setAlpha(lesson.m_isImportant ? 1.0f : 0.15f);
                         break;
                     case R.id.card_view:
-                        Log.d("init", "detailed view");
-
-                        DetailedClassFragment mFragment = DetailedClassFragment.newInstance(lesson);
+                        DetailedClassFragment mFragment = DetailedClassFragment.newInstance(lesson.parent);
                         MainNavigationDrawer mainActivity = (MainNavigationDrawer)v.getContext();
                         Log.d("init", v.getContext().toString());
                         mainActivity.switchContent(mFragment);
                         break;
                 }
-                list.set(item, lesson);
+            }
+            public boolean onLongClick(View v) {
+                int item = this.getAdapterPosition();
+                currentLesson = list.get(item);
+                return true;
             }
             @Override
             public void onCreateContextMenu(ContextMenu menu, View v,
                                             ContextMenu.ContextMenuInfo menuInfo) {
-                int item = this.getAdapterPosition();
-                Lesson lesson = list.get(item);
-
+/*
                 menu.setHeaderTitle(R.string.lesson_menu_title);
                 menu.add(0, v.getId(), 0, R.string.lesson_menu_imp);//groupId, itemId, order, title
                 menu.add(0, v.getId(), 0, R.string.lesson_menu_hw);
                 menu.add(0, v.getId(), 0, R.string.lesson_menu_canc);
+                 */
             }
         };
     }
@@ -77,34 +85,22 @@ public class DayTableAdapter extends RecyclerView.Adapter<DayTableAdapter.MyView
 
     @Override
     public void onBindViewHolder(MyViewHolder vh, int i) {
-        Lesson lesson = list.get(i);
+        RegLessonInstance lesson = list.get(i);
 
         vh.mLesson = lesson;
 
         vh.mTime1.setText(lesson.m_timeStart);
         vh.mTime2.setText(lesson.m_timeEnd);
 
-        if (!lesson.m_roomName.isEmpty())
-            vh.mWhere.setText(lesson.m_buildingName + ", " + lesson.m_roomName);
-        String class_type = "";
-        switch(lesson.m_type)
-        {
-            case 0:
-                class_type = " (практика)";
-                break;
-            case 1:
-                class_type = " (лабораторные)";
-                break;
-            case 2:
-                class_type = " (теория)";
-                break;
-        }
+        vh.mWhere.setText(lesson.m_buildingName + ", " + lesson.m_roomName);
+        String class_type = vh.mName.getContext().getResources().getStringArray(R.array.lesson_type)[lesson.m_type];
 
-        vh.mName.setText(lesson.m_subject + class_type);
+        vh.mType.setText(class_type);
+        vh.mName.setText(lesson.parent.m_subject);
 
-        vh.mCanceled.setVisibility(lesson.m_isCanceled ? View.VISIBLE : View.GONE);
-        vh.mHomework.setAlpha(lesson.m_isHomework ? 1.0f : 0.15f);
-        vh.mImportant.setAlpha(lesson.m_isImportant ? 1.0f : 0.15f);
+        vh.mCanceled.setVisibility(lesson.m_isCanceled.containsKey(week) ? View.VISIBLE : View.GONE);
+        vh.mHomework.setAlpha(lesson.m_isHomework.containsKey(week) ? 1.0f : 0.15f);
+        vh.mImportant.setAlpha(lesson.m_isImportant.containsKey(week) ? 1.0f : 0.15f);
     }
 
     @Override
@@ -113,18 +109,20 @@ public class DayTableAdapter extends RecyclerView.Adapter<DayTableAdapter.MyView
     }
 
     public static class MyViewHolder extends RecyclerView.ViewHolder
-    implements View.OnClickListener, View.OnCreateContextMenuListener {
-        public TextView mTime1, mTime2, mWhere, mName;
+    implements View.OnClickListener,
+            View.OnCreateContextMenuListener {
+        public TextView mTime1, mTime2, mWhere, mType, mName;
         public ImageView mHomework, mCanceled, mImportant;
         public CardView mCardView;
-        public Lesson mLesson;
+        public RegLessonInstance mLesson;
 
-        MyViewHolder(View view){
+        MyViewHolder(View view) {
             super(view);
 
             this.mTime1 = (TextView) view.findViewById(R.id.time1);
             this.mTime2 = (TextView) view.findViewById(R.id.time2);
             this.mWhere = (TextView) view.findViewById(R.id.where);
+            this.mType = (TextView) view.findViewById(R.id.type);
             this.mName = (TextView) view.findViewById(R.id.class_name);
 
             this.mHomework = (ImageView) view.findViewById(R.id.homework);
@@ -136,14 +134,12 @@ public class DayTableAdapter extends RecyclerView.Adapter<DayTableAdapter.MyView
             mHomework.setOnClickListener(this);
             mImportant.setOnClickListener(this);
             mCardView.setOnClickListener(this);
-//            mCardView.setOnLongClickListener(this);
             mCardView.setOnCreateContextMenuListener(this);
         }
 
         @Override
         public void onClick(View v) {
         }
-
         @Override
         public void onCreateContextMenu(ContextMenu menu, View v,
                                         ContextMenu.ContextMenuInfo menuInfo) {

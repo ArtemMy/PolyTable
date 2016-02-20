@@ -9,6 +9,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <include layout="@layout/daytable" />
-
+    <android.support.v7.widget.RecyclerView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/daytable_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="5dp"
+        android:scrollbars="vertical" />
 </LinearLayout>

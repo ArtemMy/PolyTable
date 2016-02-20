@@ -34,45 +34,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link TimeTableFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link TimeTableFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class TimeTableFragment extends Fragment
         implements CollapseCalendarView.OnDateSelect,
         CardView.OnCreateContextMenuListener {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private static final String ARG_PARAM = "lessons";
+    View mRootView = null;
+    List<RegLessonInstance> mAllClasses;
+    LocalDate mDay;
+    RegLessonInstance currentLesson;
+    private ArrayList<Lesson> mLessonList;
     private static CalendarManager calendarManager;
     private static CollapseCalendarView calendarView;
     private OnFragmentInteractionListener mListener;
     RecyclerView daytableView;
 
     private boolean mOnCreateCalled = false;
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment TimeTableFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static TimeTableFragment newInstance(String param1, String param2) {
+
+    public static TimeTableFragment newInstance(ArrayList<Lesson> listLesson) {
         TimeTableFragment fragment = new TimeTableFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
+        args.putSerializable("lessons", listLesson);
         fragment.setArguments(args);
         return fragment;
     }
@@ -86,72 +67,60 @@ public class TimeTableFragment extends Fragment
         super.onCreate(savedInstanceState);
         Log.d("init", "timetable fragment onCreate");
 
-        /*
-        if(!StaticStorage.m_isInitialized) {
-            FragmentManager fragmentManager = getFragmentManager();
-            FragmentTransaction transaction = fragmentManager.beginTransaction();
-            transaction.replace(R.id.container, new SearchFragment());
-            transaction.addToBackStack(null);
-            transaction.commit();
-        }
-        */
-
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+            mLessonList = (ArrayList<Lesson>)getArguments().getSerializable(ARG_PARAM);
         }
-                /* calendar init */
+        else
+            mLessonList = new ArrayList<Lesson>();
+        /* calendar init */
         calendarManager = new CalendarManager(LocalDate.now(), CalendarManager.State.MONTH, LocalDate.now(), LocalDate.now().plusYears(1));
+        setHasOptionsMenu(true);
 //        calendarManager.toggleView();
-        registerForContextMenu(daytableView);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_time_table, container, false);
+        if(mRootView == null)
+            mRootView = inflater.inflate(R.layout.fragment_time_table, container, false);
 
         calendarManager.toggleView();
-        calendarView = (CollapseCalendarView) view.findViewById(R.id.day_table_calendar);
+        calendarView = (CollapseCalendarView) mRootView.findViewById(R.id.day_table_calendar);
         calendarView.setListener(this);
         calendarView.init(calendarManager);
-        initTable(view);
+        initTable();
         mOnCreateCalled = true;
-        return view;
+        return mRootView;
     }
 
-    private void initTable (View view)
+    private void initTable ()
     {
         int w = calendarManager.getSelectedDay().getDayOfWeek() - 1;
-
+        mDay = calendarManager.getSelectedDay();
         if(w == 6) {
             return;
         }
-        Log.d("init", String.valueOf(StaticStorage.m_isInitialized));
 
-        List<Lesson> allClasses = new ArrayList<Lesson>();
-        for (int i = w * 5; i < (w + 1) * 5; i++) {
-            Lesson lesson = StaticStorage.m_listLessons.get(i);
-            if(!lesson.m_subject.isEmpty()) {
-                allClasses.add(lesson);
-                /*
-                SingleClassView scv = new SingleClassView(getActivity());
-                scv.init(lesson);
-                dayTableLayout.addView(scv);
-                registerForContextMenu(scv);
-                 */
+        Log.d("init", String.valueOf(mLessonList.size()));
+        mAllClasses = new ArrayList<RegLessonInstance>();
+        for (Lesson lesson : mLessonList) {
+            if(lesson.getLessonInstances(w) != null) {
+                mAllClasses.addAll(lesson.getLessonInstances(w));
             }
         }
-        daytableView = (RecyclerView)view.findViewById(R.id.daytable_view);
+        Log.d("init", String.valueOf(mAllClasses.size()));
+
+        daytableView = (RecyclerView)mRootView.findViewById(R.id.daytable_view);
         daytableView.setItemAnimator(new DefaultItemAnimator());
         daytableView.setHasFixedSize(true);
 
-        RecyclerView.LayoutManager layoutManager=new LinearLayoutManager(getActivity());
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
         daytableView.setLayoutManager(layoutManager);
 
-        RecyclerView.Adapter adapter = new DayTableAdapter(allClasses);
+        RecyclerView.Adapter adapter = new DayTableAdapter(mAllClasses, mDay, currentLesson);
         daytableView.setAdapter(adapter);
+        registerForContextMenu(daytableView);
     }
 
     @Override
@@ -159,35 +128,43 @@ public class TimeTableFragment extends Fragment
         MenuInflater inflater = getActivity().getMenuInflater();
         inflater.inflate(R.menu.class_menu, menu);
         Toast.makeText(getActivity(), "loooong click", Toast.LENGTH_SHORT).show();
-        MenuItem item = menu.getItem(0);
-//        mClassViews.
     }
 
-    /*
     @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        ContextMenu.ContextMenuInfo info = (ContextMenu.ContextMenuInfo) item.getMenuInfo();
+        public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+
+        currentLesson = mAllClasses.get(info.position);
         switch (item.getItemId()) {
             case R.id.menu_class_cancel:
-                ((SingleClassView) info.targetView).setCanceled(!((SingleClassView) info.targetView).getCanceled());
                 return true;
             case R.id.menu_class_important:
-                ((SingleClassView) info.targetView).setImportant(!((SingleClassView) info.targetView).getImportant());
+                Log.d("init", "mImportant");
+                if(currentLesson.m_isImportant.containsKey(mDay)) {
+                    currentLesson.m_isImportant.remove(mDay);
+                    initTable();
+                }
+                else {
+                    currentLesson.m_isImportant.put(mDay, true);
+                    initTable();
+                }
                 return true;
-            case R.id.menu_class_edit:
-                Toast.makeText(getActivity(), "ediiit", Toast.LENGTH_SHORT).show();
+            case R.id.menu_class_homework:
+                Log.d("init", "mHomework");
+                if(currentLesson.m_isHomework.containsKey(mDay)) {
+                    currentLesson.m_isHomework.remove(mDay);
+                    initTable();
+                }
+                else {
+                    currentLesson.m_isHomework.put(mDay, "");
+                    initTable();
+                }
                 return true;
             default:
                 return super.onContextItemSelected(item);
         }
     }
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
-    }
-*/
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -227,6 +204,6 @@ public class TimeTableFragment extends Fragment
             calendarView.populateLayout();
         }
         if(mOnCreateCalled)
-           initTable(getView());
+           initTable();
     }
 }

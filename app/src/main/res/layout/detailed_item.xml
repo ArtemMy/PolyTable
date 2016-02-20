@@ -17,6 +17,7 @@
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:minHeight="12dp"
+        android:elegantTextHeight="true"
         android:gravity="center_vertical"
         android:textSize="18sp"
         android:textColor="#448AFF" >
@@ -31,8 +32,8 @@
         android:id="@+id/detailed_item_value"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="12dp"
-        android:textSize="20sp"
+        android:elegantTextHeight="true"
+        android:textSize="18sp"
         android:gravity="end"
         android:textColor="#FF000000" >
         <requestFocus />

@@ -100,7 +100,6 @@ public class ServerGetGroups extends AsyncTask<Faculty, String, String>
             }
         };
         Collections.sort(listGroups, compGroups);
-        StaticStorage.m_listGroups.addAll(listGroups);
 //        for (Group mygroup : listGroups) {
 //            StaticStorage.m_listGroupsName.add(String.valueOf(mygroup.m_name));
 //        }
@@ -115,24 +114,13 @@ public class ServerGetGroups extends AsyncTask<Faculty, String, String>
         ArrayList<Group> listGroups = parseJson(strResult);
 
         ArrayList<Faculty>      listFaculties = StaticStorage.m_listFaculties;
-        //StringBuilder           strBuilder = new StringBuilder();
-        for (int i = 0; i < listFaculties.size(); i++)
-        {
-            Faculty f = listFaculties.get(i);
-            //strBuilder.append("name=");
-            //strBuilder.append(f.m_name);
-            //strBuilder.append("(");
-            //strBuilder.append(f.m_id);
-            //strBuilder.append(")");
-            //strBuilder.append(",");
-        }
-        //String strToPrint = strBuilder.toString();
         int                     i, n;
 
         n = listGroups.size();
         for (i = 0; i < n; i++)
         {
             Group group = listGroups.get(i);
+            StaticStorage.m_listGroups.add(group);
             m_adapterGroups.add(group.m_name);
         }
         m_adapterGroups.notifyDataSetChanged();

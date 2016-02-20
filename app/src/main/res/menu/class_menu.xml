@@ -6,6 +6,6 @@
     <item android:id="@+id/menu_class_important" android:icon="@android:drawable/ic_menu_search"
         app:showAsAction="always"
         android:title="Mark as important" />
-    <item android:id="@+id/menu_class_edit" android:icon="@android:drawable/ic_menu_today"
-        android:title="Edit" />
+    <item android:id="@+id/menu_class_homework" android:icon="@android:drawable/ic_menu_today"
+        android:title="Homework" />
 </menu>

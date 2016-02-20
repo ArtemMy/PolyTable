@@ -3,65 +3,74 @@ package edu.amd.spbstu.polystudenttimetable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class Lesson implements Parcelable
+import com.wefika.calendar.manager.Week;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Lesson implements Serializable
 {
-    public int      m_day;  // 0, 1, 2, 3, 4, 5
-    public int      m_type;  // 0, 1, 2
-    public int      m_hour;     // 0 for 8:00, 1 for 10:00,
+    public Map<Integer, List<RegLessonInstance> > m_reg;
 
     public String   m_subject;
-    public String   m_timeStart;
-    public String   m_timeEnd;
-
     public String   m_teacherFio;
-    public String   m_groupName;
 
-    public String   m_roomName;
-    public String   m_buildingName;
-
-    public boolean m_isCanceled;
-    public boolean m_isImportant;
-    public boolean m_isHomework;
     public Lesson()
     {
-        m_day           = -1;
-        m_type          = -1;
-        m_hour          = -1;
         m_subject       = "";
-        m_timeStart     = "";
-        m_timeEnd       = "";
         m_teacherFio    = "";
-        m_groupName     = "";
-        m_roomName      = "";
-        m_buildingName  = "";
-        m_isCanceled = false;
-        m_isImportant = false;
-        m_isHomework = false;
+        m_reg = new HashMap<Integer, List<RegLessonInstance> >();
     }
 
+//    @Override
+    public boolean equals(Lesson sl){
+        return (m_subject.equals(sl.m_subject) && m_teacherFio.equals(sl.m_teacherFio));
+    }
+
+    public void add(int d, int lessonType, String strTimeStart, String strTimeEnd, String strRoomName, String strBldName) {
+        RegLessonInstance reg = new RegLessonInstance(this);
+        reg.m_day = d;
+        reg.m_type = lessonType;
+        reg.m_timeStart = strTimeStart;
+        reg.m_timeEnd = strTimeEnd;
+        reg.m_roomName = strRoomName;
+        reg.m_buildingName = strBldName;
+        List <RegLessonInstance> l;
+        if(m_reg.containsKey(d))
+            l = m_reg.get(d);
+        else
+            l = new ArrayList<RegLessonInstance>();
+        l.add(reg);
+        m_reg.put(d, l);
+    }
+
+    public List<RegLessonInstance> getLessonInstances(Integer dayOfWeek) {
+        return m_reg.get(dayOfWeek);
+    }
+    public List<RegLessonInstance> getAllLessonInstances() {
+        List<RegLessonInstance> res = new ArrayList<>();
+        for (List<RegLessonInstance> list : m_reg.values()) {
+            res.addAll(list);
+        }
+        return res;
+    }
+/*
     public Lesson(Parcel in){
         String[] data_s = new String[7];
         in.readStringArray(data_s);
         this.m_subject = data_s[0];
-        this.m_timeStart = data_s[1];
-        this.m_timeEnd = data_s[2];
         this.m_teacherFio = data_s[3];
-        this.m_groupName = data_s[4];
-        this.m_roomName = data_s[5];
-        this.m_buildingName = data_s[6];
 
         int[] data_i = new int[3];
         in.readIntArray(data_i);
-        this.m_day = data_i[0];
-        this.m_type = data_i[1];
-        this.m_hour = data_i[2];
 
         boolean[] data_b = new boolean[3];
         in.readBooleanArray(data_b);
-        this.m_isCanceled = data_b[0];
-        this.m_isImportant = data_b[1];
-        this.m_isHomework = data_b[2];
-
     }
 
     @Override
@@ -71,19 +80,14 @@ public class Lesson implements Parcelable
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeStringArray(new String[] {this.m_subject,
-                this.m_timeStart,
-                this.m_timeEnd,
-                this.m_teacherFio,
-                this.m_groupName,
-                this.m_roomName,
-                this.m_buildingName});
-        dest.writeIntArray(new int[]{this.m_day,
-                this.m_type,
-                this.m_hour});
-        dest.writeBooleanArray(new boolean[]{this.m_isCanceled,
-                this.m_isImportant,
-                this.m_isHomework});
+        dest.writeStringArray(new String[]{
+                this.m_subject,
+                this.m_teacherFio});
+        dest.writeInt(m_reg.size());
+        for(Map.Entry<String,String> entry : m_reg.entrySet()){
+            dest.writeString(m_reg.getKey());
+            dest.writeString(m_reg.getValue());
+        }
     }
 
     public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
@@ -95,5 +99,6 @@ public class Lesson implements Parcelable
             return new Lesson[size];
         }
     };
+    */
 }
 
