@@ -20,20 +20,34 @@ import java.util.ArrayList;
 /**
  * Created by artem on 12/2/15.
  */
-public class ServerGetTable extends AsyncTask<Group, String, String>
+public class ServerGetTable extends AsyncTask<Void, String, String>
 {
-    private ArrayAdapter<String> m_listTTable;
     private Fragment m_ctx;
     private ProgressDialog pb;
-    public ServerGetTable(ArrayAdapter<String> l, Fragment ctx)
-    {
-        m_listTTable = l;
-        m_ctx = ctx;
-    }
+    private Group m_group;
+    private Lecturer m_lect;
 
-    protected String doInBackground(Group... group)
+    private boolean isGroup;
+
+    public ServerGetTable(Group group, Fragment ctx)
     {
-        String strUrl = "http://ruz2.spbstu.ru/api/v1/ruz/scheduler/" + String.valueOf(group[0].m_id);
+        m_group = group;
+        m_ctx = ctx;
+        isGroup = true;
+    }
+    public ServerGetTable(Lecturer lecturer, Fragment ctx)
+    {
+        m_ctx = ctx;
+        m_lect = lecturer;
+        isGroup = false;
+    }
+    protected String doInBackground(Void... v)
+    {
+        String strUrl;
+        if(isGroup)
+            strUrl = "http://ruz2.spbstu.ru/api/v1/ruz/scheduler/" + String.valueOf(m_group.m_id);
+        else
+            strUrl = "http://ruz2.spbstu.ru/api/v1/ruz/teachers/" + m_lect.m_id + "/scheduler";
         URL url;
         Log.d("init", strUrl);
         try
@@ -76,15 +90,7 @@ public class ServerGetTable extends AsyncTask<Group, String, String>
             JSONObject objRoot = new JSONObject(strJson);
             JSONObject objWeek = (JSONObject) objRoot.get("week");
             JSONArray arrDays = (JSONArray) objRoot.get("days");
-            JSONObject objGroup = (JSONObject) objRoot.get("group");
 
-            String strWeekStart = (String) objWeek.get("date_start");
-            String strWeekEnd = (String) objWeek.get("date_end");
-            boolean isOdd = (boolean) objWeek.get("is_odd");
-
-            strTeacherFIO = "";
-            strRoomName = "";
-            strBldName = "";
             for (int d = 0; d < 6; d++) {
                 JSONObject dayWeek = (JSONObject) arrDays.getJSONObject(d);
                 JSONArray arrLessons = (JSONArray) dayWeek.get("lessons");
@@ -95,6 +101,7 @@ public class ServerGetTable extends AsyncTask<Group, String, String>
                     lessonType = (int) objLesson.get("type");
                     strTimeStart = (String) objLesson.get("time_start");
                     strTimeEnd = (String) objLesson.get("time_end");
+
                     strTeacherFIO = "";
                     JSONArray arrTeachers = (JSONArray) objLesson.get("teachers");
                     int numTeachers = arrTeachers.length();
@@ -102,6 +109,7 @@ public class ServerGetTable extends AsyncTask<Group, String, String>
                         JSONObject objTeacher = (JSONObject) arrTeachers.getJSONObject(t);
                         strTeacherFIO = (String) objTeacher.get("full_name");
                     }
+
                     strRoomName = "";
                     strBldName = "";
                     JSONArray arrRooms = (JSONArray) objLesson.get("auditories");
@@ -112,7 +120,20 @@ public class ServerGetTable extends AsyncTask<Group, String, String>
                         JSONObject objBuilding = (JSONObject) objRoom.get("building");
                         strBldName = (String) objBuilding.get("abbr");
                     } // for (r) rooms
+
                     lesson = new Lesson();
+
+                    JSONArray arrGroups = (JSONArray) objLesson.get("groups");
+                    int numGroups = arrGroups.length();
+                    for (int t = 0; t < numGroups; t++) {
+                        JSONObject objGroup = (JSONObject) arrGroups.getJSONObject(t);
+                        Group g = new Group();
+                        g.m_name = (String) objGroup.get("name");
+                        g.m_id = (int) objGroup.get("id");
+                        g.m_spec = (String) objGroup.get("spec");
+                        lesson.m_list_groups.add(g);
+                    }
+
                     Log.d("init s", "add lesson");
                     lesson.m_subject = strSubject;
                     lesson.m_teacherFio = strTeacherFIO;
@@ -143,21 +164,20 @@ public class ServerGetTable extends AsyncTask<Group, String, String>
         pb.dismiss();
         FragmentManager fragmentManager = m_ctx.getFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.container, TimeTableFragment.newInstance(listLesson));
+        if(isGroup) {
+            m_group.m_listLessons = listLesson;
+            transaction.replace(R.id.container, TimeTableFragment.newInstance(m_group));
+        }
+        else {
+            m_lect.m_listLessons = listLesson;
+            transaction.replace(R.id.container, TimeTableFragment.newInstance(m_lect));
+        }
         transaction.addToBackStack(null);
         transaction.commit();
-//        fillWithTTable(m_listTTable);
     }
     @Override
     protected void onPreExecute()
     {
-        /*
-        FragmentManager fragmentManager = m_ctx.getFragmentManager();
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.container, new TimeTableFragment());
-        transaction.addToBackStack(null);
-        transaction.commit();
-        */
         pb = new ProgressDialog(m_ctx.getActivity());
         pb.setMessage("downloading ...");
         pb.show();

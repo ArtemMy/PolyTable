@@ -149,6 +149,7 @@ public class DetailedClassFragment extends Fragment {
             }
             detailed_class_list.addView(item);
         }
+        getActivity().setTitle("");
         return view;
     }
 

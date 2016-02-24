@@ -30,8 +30,8 @@
                     android:paddingLeft="30dp"
                     android:paddingRight="10dp"
                     android:elegantTextHeight="true"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Title"
-                    android:textColor="#FF000000" />
+                    android:textSize="22sp"
+                    android:textColor="#FFFFFF"/>
             </LinearLayout>
 
         </android.support.design.widget.CollapsingToolbarLayout>

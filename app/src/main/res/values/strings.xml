@@ -57,4 +57,19 @@
         <item>Lecturer</item>
         <item>Instances</item>
     </string-array>
+
+    <string name="group_search_placeholder">Group number:</string>
+    <string name="lecturer_search_placeholder">Lecturer name:</string>
+
+    <string name="search_recent_title">Recent:</string>
+    <string name="error_title">Error</string>
+
+    <string name="search">Search</string>
+    <string name="login">Login</string>
+    <string name="about">About</string>
+
+    <string name="cancel">Cancel</string>
+    <string name="importnant">Mark as important</string>
+    <string name="homework">Homework</string>
+
 </resources>

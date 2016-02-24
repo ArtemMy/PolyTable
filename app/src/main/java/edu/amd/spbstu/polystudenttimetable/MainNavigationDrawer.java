@@ -104,7 +104,7 @@ public class MainNavigationDrawer extends AppCompatActivity
 
         Log.d("init", "begin transaction");
         getFragmentManager().beginTransaction()
-                    .replace(R.id.container, new TimeTableFragment())
+                    .replace(R.id.container, new SearchTabFragment())
                     .commit();
     }
 
@@ -165,7 +165,7 @@ public class MainNavigationDrawer extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main_navigation_drawer, menu);
+//        getMenuInflater().inflate(R.menu.main_navigation_drawer, menu);
         return true;
     }
 
@@ -193,10 +193,8 @@ public class MainNavigationDrawer extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_table) {
-            fragment = new TimeTableFragment();
-        } else if (id == R.id.nav_search) {
-            fragment = new SearchFragment();
+        if (id == R.id.nav_search) {
+            fragment = new SearchTabFragment();
         }
         if(fragment != null) {
             ViewGroup vg = (ViewGroup) findViewById(R.id.container);
@@ -232,6 +230,14 @@ public class MainNavigationDrawer extends AppCompatActivity
         ft.addToBackStack(null);
         ft.commit();
     }
+
+    protected void setToolbarTitle(String s) {
+        Toolbar tb = (Toolbar) findViewById(R.id.toolbar);
+        tb.setTitle(s);
+        super.onStart();
+//        mGoogleApiClient.connect();
+    }
+
     /*
     // database
 

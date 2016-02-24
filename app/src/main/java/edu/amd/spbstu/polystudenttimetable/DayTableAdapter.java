@@ -109,8 +109,8 @@ public class DayTableAdapter extends RecyclerView.Adapter<DayTableAdapter.MyView
     }
 
     public static class MyViewHolder extends RecyclerView.ViewHolder
-    implements View.OnClickListener,
-            View.OnCreateContextMenuListener {
+        implements View.OnClickListener,
+                View.OnCreateContextMenuListener {
         public TextView mTime1, mTime2, mWhere, mType, mName;
         public ImageView mHomework, mCanceled, mImportant;
         public CardView mCardView;
@@ -144,5 +144,6 @@ public class DayTableAdapter extends RecyclerView.Adapter<DayTableAdapter.MyView
         public void onCreateContextMenu(ContextMenu menu, View v,
                                         ContextMenu.ContextMenuInfo menuInfo) {
         }
+
     }
 }

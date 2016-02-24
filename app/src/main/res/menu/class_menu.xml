@@ -2,10 +2,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item android:id="@+id/menu_class_cancel" android:icon="@android:drawable/ic_menu_upload"
-        android:title="Cancel" />
+        android:title="@string/cancel" />
     <item android:id="@+id/menu_class_important" android:icon="@android:drawable/ic_menu_search"
         app:showAsAction="always"
-        android:title="Mark as important" />
+        android:title="@string/importnant" />
     <item android:id="@+id/menu_class_homework" android:icon="@android:drawable/ic_menu_today"
-        android:title="Homework" />
+        android:title="@string/homework" />
 </menu>

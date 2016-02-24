@@ -14,6 +14,7 @@ public class StaticStorage implements Serializable
     public static ArrayList<Lesson>      m_listLessons = new ArrayList<Lesson>();
 
     public static ArrayList<Lecturer>   m_listLecturers = new ArrayList<Lecturer>();
+    public static ArrayList<String>     m_listLecturerName = new ArrayList<String>();
 
     public StaticStorage()
     {
@@ -26,6 +27,7 @@ public class StaticStorage implements Serializable
         m_listGroupsName.clear();
         m_listLessons.clear();
         m_listLecturers.clear();
+        m_listLecturerName.clear();
     }
 
 }

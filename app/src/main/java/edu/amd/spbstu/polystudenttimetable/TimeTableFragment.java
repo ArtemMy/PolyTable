@@ -21,6 +21,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,23 +38,37 @@ import java.util.List;
 public class TimeTableFragment extends Fragment
         implements CollapseCalendarView.OnDateSelect,
         CardView.OnCreateContextMenuListener {
-    private static final String ARG_PARAM = "lessons";
+    private static final String ARG_LESSONS = "lessons";
+    private static final String ARG_TITLE = "title";
     View mRootView = null;
     List<RegLessonInstance> mAllClasses;
     LocalDate mDay;
     RegLessonInstance currentLesson;
+
     private ArrayList<Lesson> mLessonList;
+    private String mTitle;
+
     private static CalendarManager calendarManager;
     private static CollapseCalendarView calendarView;
     private OnFragmentInteractionListener mListener;
-    RecyclerView daytableView;
+    ListView daytableView;
 
     private boolean mOnCreateCalled = false;
 
-    public static TimeTableFragment newInstance(ArrayList<Lesson> listLesson) {
+    public static TimeTableFragment newInstance(Lecturer lect) {
         TimeTableFragment fragment = new TimeTableFragment();
         Bundle args = new Bundle();
-        args.putSerializable("lessons", listLesson);
+        args.putSerializable(ARG_LESSONS, lect.m_listLessons);
+        args.putSerializable(ARG_TITLE, lect.m_fio);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    public static TimeTableFragment newInstance(Group group) {
+        TimeTableFragment fragment = new TimeTableFragment();
+        Bundle args = new Bundle();
+        args.putSerializable(ARG_LESSONS, group.m_listLessons);
+        args.putSerializable(ARG_TITLE, group.m_name);
         fragment.setArguments(args);
         return fragment;
     }
@@ -68,10 +83,13 @@ public class TimeTableFragment extends Fragment
         Log.d("init", "timetable fragment onCreate");
 
         if (getArguments() != null) {
-            mLessonList = (ArrayList<Lesson>)getArguments().getSerializable(ARG_PARAM);
+            mLessonList = (ArrayList<Lesson>)getArguments().getSerializable(ARG_LESSONS);
+            mTitle = (String)getArguments().getSerializable(ARG_TITLE);
         }
-        else
+        else {
             mLessonList = new ArrayList<Lesson>();
+            mTitle = getResources().getString(R.string.error_title);
+        }
         /* calendar init */
         calendarManager = new CalendarManager(LocalDate.now(), CalendarManager.State.MONTH, LocalDate.now(), LocalDate.now().plusYears(1));
         setHasOptionsMenu(true);
@@ -91,6 +109,9 @@ public class TimeTableFragment extends Fragment
         calendarView.init(calendarManager);
         initTable();
         mOnCreateCalled = true;
+
+        getActivity().setTitle(mTitle);
+
         return mRootView;
     }
 
@@ -111,23 +132,25 @@ public class TimeTableFragment extends Fragment
         }
         Log.d("init", String.valueOf(mAllClasses.size()));
 
-        daytableView = (RecyclerView)mRootView.findViewById(R.id.daytable_view);
-        daytableView.setItemAnimator(new DefaultItemAnimator());
-        daytableView.setHasFixedSize(true);
+        daytableView = (ListView)mRootView.findViewById(R.id.daytable_view);
+//        daytableView.setItemAnimator(new DefaultItemAnimator());
+//        daytableView.setHasFixedSize(true);
 
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
-        daytableView.setLayoutManager(layoutManager);
+//        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
+//        daytableView.setLayoutManager(layoutManager);
 
-        RecyclerView.Adapter adapter = new DayTableAdapter(mAllClasses, mDay, currentLesson);
+//        DayTableAdapter adapter = new DayTableAdapter(mAllClasses, mDay, currentLesson);
+        DayTableListAdapter adapter = new DayTableListAdapter(getActivity(), mAllClasses, mDay, daytableView);
         daytableView.setAdapter(adapter);
         registerForContextMenu(daytableView);
+
     }
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         MenuInflater inflater = getActivity().getMenuInflater();
         inflater.inflate(R.menu.class_menu, menu);
-        Toast.makeText(getActivity(), "loooong click", Toast.LENGTH_SHORT).show();
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
     }
 
     @Override
@@ -137,6 +160,15 @@ public class TimeTableFragment extends Fragment
         currentLesson = mAllClasses.get(info.position);
         switch (item.getItemId()) {
             case R.id.menu_class_cancel:
+                Log.d("init", "Cancel class");
+                if(currentLesson.m_isCanceled.containsKey(mDay)) {
+                    currentLesson.m_isCanceled.remove(mDay);
+                    initTable();
+                }
+                else {
+                    currentLesson.m_isCanceled.put(mDay, true);
+                    initTable();
+                }
                 return true;
             case R.id.menu_class_important:
                 Log.d("init", "mImportant");

@@ -17,6 +17,7 @@ public class Lesson implements Serializable
 {
     public Map<Integer, List<RegLessonInstance> > m_reg;
 
+    public List<Group> m_list_groups;
     public String   m_subject;
     public String   m_teacherFio;
 
@@ -25,6 +26,7 @@ public class Lesson implements Serializable
         m_subject       = "";
         m_teacherFio    = "";
         m_reg = new HashMap<Integer, List<RegLessonInstance> >();
+        m_list_groups = new ArrayList<Group>();
     }
 
 //    @Override
