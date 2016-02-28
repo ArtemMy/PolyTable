@@ -1,5 +1,6 @@
 package edu.amd.spbstu.polystudenttimetable;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -8,6 +9,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Handler;
+import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -19,7 +22,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Filter;
+import android.widget.ListView;
 import android.widget.TextView;
+import android.support.v7.widget.Toolbar;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -81,7 +86,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam = getArguments().getString(ARG_TYPE);
+            mParam = getArguments().getString(ARG_PARAM);
             mType = (getArguments().getInt(ARG_TYPE) == 0) ? t_type.GROUP : t_type.LECTURER;
         }
         Log.d("init", "search fragment onCreate");
@@ -91,96 +96,80 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+//        if(view == null)
+        Log.d("init", "search fragment onCreateView");
         if(view == null)
             view = inflater.inflate(R.layout.fragment_search, container, false);
-        textView = (AutoCompleteTextView)
-                view.findViewById(R.id.autocomplete_search);
-        textView.setThreshold(1);
+        if(textView == null) {
+            textView = (AutoCompleteTextView)
+                    view.findViewById(R.id.autocomplete_search);
+            textView.setThreshold(1);
+            if(mType == t_type.GROUP) {
+                textView.setOnClickListener(this);
+                textView.setOnItemClickListener(this);
 
-/*        ArrayAdapter adapterGroups = new ArrayAdapter(inflater.getContext(), R.layout.list_item_2_text, StaticStorage.m_listGroups){
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent){
-                View holder;
-                if(convertView == null){
-                    // You should fetch the LayoutInflater once in your constructor
-                    holder = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_2_text, parent, false);
-                }else{
-                    holder = convertView;
-                }
+                textView.setHint(R.string.group_search_placeholder);
 
-                TextView v = (TextView) holder.findViewById(R.id.item_list_text1);
-                v.setText(((Group) getItem(position)).m_name);
-                v = (TextView) holder.findViewById(R.id.item_list_text2);
-                v.setText(((Group) getItem(position)).m_spec);
-                return holder;
-            }
-            @Override
-            public Filter getFilter() {
-                return nameFilter;
-            }
+                adapter = new ArrayAdapter<String>(getActivity(), R.layout.text_layout, StaticStorage.m_listGroupsName);
+                textView.setAdapter(adapter);
+                adapter.setNotifyOnChange(true);
 
-            Filter nameFilter = new Filter() {
-                @Override
-                public String convertResultToString(Object resultValue) {
-                    String str = ((Group)(resultValue)).m_name;
-                    return str;
-                }
-                @Override
-                protected FilterResults performFiltering(CharSequence constraint) {
-                    if(constraint != null) {
-                        suggestions.clear();
-                        for (Customer customer : itemsAll) {
-                            if(customer.getName().toLowerCase().startsWith(constraint.toString().toLowerCase())){
-                                suggestions.add(customer);
-                            }
+                ListView list = (ListView) view.findViewById(R.id.recentList);
+                ArrayAdapter recent_adapter = new ArrayAdapter(inflater.getContext(), R.layout.detailed_item_list_item, StaticStorage.m_recentGroups){
+                    @Override
+                    public View getView(int position, View convertView, ViewGroup parent){
+                        View holder;
+                        Group group = (Group)getItem(position);
+                        if(convertView == null){
+                            // You should fetch the LayoutInflater once in your constructor
+                            holder = LayoutInflater.from(parent.getContext()).inflate(R.layout.detailed_item_list_item, parent, false);
+                        }else{
+                            holder = convertView;
                         }
-                        FilterResults filterResults = new FilterResults();
-                        filterResults.values = suggestions;
-                        filterResults.count = suggestions.size();
-                        return filterResults;
-                    } else {
-                        return new FilterResults();
+
+                        TextView v = (TextView) holder.findViewById(R.id.detailed_item_list_item_text1);
+                        v.setText(group.m_name);
+                        v = (TextView) holder.findViewById(R.id.detailed_item_list_item_text2);
+                        v.setText(group.m_faculty.m_abbr);
+                        v = (TextView) holder.findViewById(R.id.detailed_item_list_item_text3);
+                        v.setText(group.m_spec);
+                        return holder;
                     }
-                }
-                @Override
-                protected void publishResults(CharSequence constraint, FilterResults results) {
-                    ArrayList<Customer> filteredList = (ArrayList<Customer>) results.values;
-                    if(results != null && results.count > 0) {
-                        clear();
-                        for (Customer c : filteredList) {
-                            add(c);
-                        }
-                        notifyDataSetChanged();
+                };
+                list.setAdapter(recent_adapter);
+                // ListView Item Click Listener
+                list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view,
+                                            int position, long id) {
+                        Group tmpGroup = (Group)StaticStorage.m_recentGroups.get(position);
+
+                        Log.d("init", tmpGroup.toString());
+                        new ServerGetTable(tmpGroup, getFragmentManager(), getActivity()).execute();
                     }
+
+                });
+
+
+                if (StaticStorage.m_listGroupsName.isEmpty()) {
+                    textView.setCompletionHint(getActivity().getString(R.string.placeholder_downloading));
+                    startDownloadListFaculties((ArrayAdapter<String>) textView.getAdapter());
                 }
-            };
-
-        };
-        */
-        if(mType == t_type.GROUP) {
-            textView.setOnClickListener(this);
-            textView.setOnItemClickListener(this);
-
-            textView.setHint(R.string.group_search_placeholder);
-
-            adapter = new ArrayAdapter<String>(getActivity(), R.layout.text_layout, StaticStorage.m_listGroupsName);
-            textView.setAdapter(adapter);
-            adapter.setNotifyOnChange(true);
-
-            if (StaticStorage.m_listGroupsName.isEmpty()) {
-                textView.setCompletionHint(getActivity().getString(R.string.placeholder_downloading));
-                startDownloadListFaculties((ArrayAdapter<String>) textView.getAdapter());
+            }
+            else {
+                textView.setOnItemClickListener(this);
+                textView.setHint(R.string.lecturer_search_placeholder);
+                adapter = new ArrayAdapter<String>(getActivity(), R.layout.text_layout, StaticStorage.m_listLecturerName);
+                adapter.setNotifyOnChange(true);
+                textView.setAdapter(adapter);
+                textView.addTextChangedListener(this);
             }
         }
-        else {
-            textView.setOnItemClickListener(this);
-            textView.setHint(R.string.lecturer_search_placeholder);
-            adapter = new ArrayAdapter<String>(getActivity(), R.layout.text_layout, StaticStorage.m_listLecturerName);
-            adapter.setNotifyOnChange(true);
-            textView.setAdapter(adapter);
-            textView.addTextChangedListener(this);
-        }
-        getActivity().setTitle(getResources().getString(R.string.search));
+
+//        ((CollapsingToolbarLayout)getActivity().findViewById(R.id.collapsing_toolbar_layout)).setTitle(getResources().getString(R.string.search));
+//        ((Toolbar)getActivity().findViewById(R.id.toolbar)).setTitle(getResources().getString(R.string.search));
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(getResources().getString(R.string.search));
         return view;
     }
 
@@ -226,12 +215,12 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
             Group tmpGroup = StaticStorage.m_listGroups.get(ind);
 
             Log.d("init", String.valueOf(StaticStorage.m_listGroups.get(pos).m_listLessons.size()));
-            new ServerGetTable(tmpGroup, this).execute();
+            new ServerGetTable(tmpGroup, getFragmentManager(), getActivity()).execute();
         } else {
 //            int ind = StaticStorage.m_listLecturerName.indexOf(selected);
             Lecturer tmpLecturer = StaticStorage.m_listLecturers.get(pos);
             Log.d("init", String.valueOf(StaticStorage.m_listLecturers.get(pos).m_listLessons.size()));
-            new ServerGetTable(tmpLecturer, this).execute();
+            new ServerGetTable(tmpLecturer, getFragmentManager(), getActivity()).execute();
         }
     }
 

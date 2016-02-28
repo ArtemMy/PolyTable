@@ -75,7 +75,14 @@ public class ServerGetGroups extends AsyncTask<Faculty, String, String>
                 group.m_name    = (String)objGr.get("name");
                 group.m_id      = (int)objGr.get("id");
                 group.m_level   = (int)objGr.get("level");
-                group.m_spec    = (String)objGr.get("spec");
+                group.m_spec_number    = "";
+                group.m_spec    = "";
+                if(!((String)objGr.get("spec")).equals("")) {
+                    String arr[] = ((String)objGr.get("spec")).split(" ", 2);
+                    group.m_spec_number    = arr[0];
+                    if(arr.length > 1)
+                        group.m_spec    = arr[1];
+                }
                 group.m_faculty = (Faculty) search_faculty;
                 listGroups.add(group);
             }

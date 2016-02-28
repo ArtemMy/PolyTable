@@ -6,4 +6,6 @@
     <color name="colorLecture">#40C4FF</color>
     <color name="yellow">#fdd835</color>
     <color name="grey_icon_tint">#CCCCCC</color>
+    <color name="white">#3C3C3C</color>
+
 </resources>

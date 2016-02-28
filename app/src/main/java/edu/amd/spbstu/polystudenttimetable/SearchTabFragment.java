@@ -24,11 +24,7 @@ public class SearchTabFragment extends Fragment {
     private ViewPager viewPager;
     private View mRootView;
     private ViewPagerAdapter adapter;
-
-    public static SearchFragment newInstance(String param1, int param2){
-        SearchFragment fragment = new SearchFragment();
-        return fragment;
-    }
+    private SearchFragment mGroupFrag, mLectFrag;
 
     public SearchTabFragment() {
         // Required empty public constructor
@@ -46,20 +42,34 @@ public class SearchTabFragment extends Fragment {
         // Inflate the layout for this fragment
         if(mRootView == null)
             mRootView = inflater.inflate(R.layout.tab_search, container, false);
+
         if(tabLayout == null) {
             tabLayout = (TabLayout) mRootView.findViewById(R.id.sliding_tabs);
-            tabLayout.addTab(tabLayout.newTab().setText("Group"));
-            tabLayout.addTab(tabLayout.newTab().setText("Lecturer"));
+            tabLayout.addTab(tabLayout.newTab().setText(getResources().getString(R.string.groups)));
+            tabLayout.addTab(tabLayout.newTab().setText(getResources().getString(R.string.lect)));
             tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
         }
-        viewPager = (ViewPager) mRootView.findViewById(R.id.viewpager);
-        if(adapter == null) {
-            adapter = new ViewPagerAdapter(getActivity().getFragmentManager());
-            adapter.addFragment(SearchFragment.newInstance("", 0), "Group");
-            adapter.addFragment(SearchFragment.newInstance("", 1), "Lecturer");
+
+        if(viewPager == null) {
+            viewPager = (ViewPager) mRootView.findViewById(R.id.viewpager);
+            if (adapter == null || adapter.getCount() != 2) {
+                adapter = new ViewPagerAdapter(getActivity().getFragmentManager());
+                Log.d("init", String.valueOf(adapter.getCount()));
+
+                if(mGroupFrag == null)
+                    mGroupFrag = SearchFragment.newInstance("", 0);
+                if(mLectFrag == null)
+                    mLectFrag = SearchFragment.newInstance("", 1);
+
+                adapter.addFragment(mGroupFrag, getResources().getString(R.string.groups));
+                adapter.addFragment(mLectFrag, getResources().getString(R.string.lect));
+
+                Log.d("init", String.valueOf(adapter.getCount()));
+            }
             viewPager.setAdapter(adapter);
             tabLayout.setupWithViewPager(viewPager);
         }
+
 /*        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override

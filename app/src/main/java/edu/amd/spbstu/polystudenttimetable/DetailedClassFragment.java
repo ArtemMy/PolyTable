@@ -43,6 +43,8 @@ public class DetailedClassFragment extends Fragment {
     private ArrayAdapter<String> cAdapter = null;
     private ArrayList<String> classes = null;
 
+    private ListView mGroupList;
+    private ArrayAdapter mGroupListAdapter;
     private OnFragmentInteractionListener mListener;
 
     /**
@@ -77,12 +79,13 @@ public class DetailedClassFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+        Log.d("init", mLesson.m_teacher.m_fio + String.valueOf(mLesson.m_teacher.m_id));
+
         View view = inflater.inflate(R.layout.fragment_detailed, container, false);
 
         TextView collapsingToolbar =
                 (TextView)view.findViewById(R.id.detailed_title);
         collapsingToolbar.setText(mLesson.m_subject);
-
         LinearLayout detailed_class_list = (LinearLayout)view.findViewById(R.id.detailed_container);
 
         String[] titles = getResources().getStringArray(R.array.class_details);
@@ -93,9 +96,58 @@ public class DetailedClassFragment extends Fragment {
                 default:
                     item = inflater.inflate(R.layout.detailed_item, container, false);
                     ((TextView) item.findViewById(R.id.detailed_item_title)).setText(titles[i]);
-                    ((TextView) item.findViewById(R.id.detailed_item_value)).setText(mLesson.m_teacherFio);
+                    ((TextView) item.findViewById(R.id.detailed_item_value)).setText(mLesson.m_teacher.m_fio);
+                    ((TextView) item.findViewById(R.id.detailed_item_value)).setOnClickListener(mLectClickListener);
                     break;
                 case 1:
+                    item = inflater.inflate(R.layout.detailed_item_list, container, false);
+                    ((TextView) item.findViewById(R.id.detailed_item_list_title)).setText(titles[i]);
+                    mGroupList = (ListView) item.findViewById(R.id.detailed_item_list_list);
+                    Log.d("init", "m_list_groups.size():" + String.valueOf(mLesson.getAllLessonInstances().size()));
+                    mGroupListAdapter = new ArrayAdapter(inflater.getContext(), R.layout.detailed_item_list_item, mLesson.m_list_groups){
+                        @Override
+                        public View getView(int position, View convertView, ViewGroup parent){
+                            View holder;
+                            Group group = (Group)getItem(position);
+                            if(convertView == null){
+                                // You should fetch the LayoutInflater once in your constructor
+                                holder = LayoutInflater.from(parent.getContext()).inflate(R.layout.detailed_item_list_item, parent, false);
+                            }else{
+                                holder = convertView;
+                            }
+
+                            TextView v = (TextView) holder.findViewById(R.id.detailed_item_list_item_text1);
+                            v.setText(group.m_name);
+                            v = (TextView) holder.findViewById(R.id.detailed_item_list_item_text3);
+                            v.setText(group.m_spec);
+                            return holder;
+                        }
+                    };
+
+                    int numberOfItems = mGroupListAdapter.getCount();
+                    // Get total height of all items.
+                    int totalItemsHeight = 0;
+                    for (int itemPos = 0; itemPos < numberOfItems; itemPos++) {
+                        View it = mGroupListAdapter.getView(itemPos, null, (ListView)mGroupList);
+                        it.measure(0, 0);
+                        totalItemsHeight += it.getMeasuredHeight();
+                    }
+
+                    int totalDividersHeight = mGroupList.getDividerHeight() *  (numberOfItems - 1);
+
+                    ViewGroup.LayoutParams params = mGroupList.getLayoutParams();
+                    params.height = totalItemsHeight + totalDividersHeight;
+                    mGroupList.setLayoutParams(params);
+                    mGroupList.requestLayout();
+
+                    Log.d("init", "adapter.getCount():" + String.valueOf(mGroupListAdapter.getCount()));
+
+                    mGroupList.setAdapter(mGroupListAdapter);
+                    // ListView Item Click Listener
+                    mGroupList.setOnItemClickListener(mGroupClickListener);
+
+                    break;
+                case 2:
                     item = inflater.inflate(R.layout.detailed_item_list, container, false);
                     ((TextView) item.findViewById(R.id.detailed_item_list_title)).setText(titles[i]);
                     ListView list = (ListView) item.findViewById(R.id.detailed_item_list_list);
@@ -126,25 +178,23 @@ public class DetailedClassFragment extends Fragment {
                         }
                     };
 
+                    numberOfItems = adapter.getCount();
+                    // Get total height of all items.
+                    totalItemsHeight = 0;
+                    for (int itemPos = 0; itemPos < numberOfItems; itemPos++) {
+                        View it = adapter.getView(itemPos, null, (ListView)list);
+                        it.measure(0, 0);
+                        totalItemsHeight += it.getMeasuredHeight();
+                    }
+
+                    totalDividersHeight = list.getDividerHeight() *  (numberOfItems - 1);
+
+                    params = list.getLayoutParams();
+                    params.height = totalItemsHeight + totalDividersHeight;
+                    list.setLayoutParams(params);
+                    list.requestLayout();
+
                     list.setAdapter(adapter);
-
-                    // ListView Item Click Listener
-                    list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-                        @Override
-                        public void onItemClick(AdapterView<?> parent, View view,
-                                                int position, long id) {
-
-                            // ListView Clicked item index
-                            int itemPosition = position;
-
-                            // ListView Clicked item value
-                            RegLessonInstance itemValue = (RegLessonInstance) parent.getItemAtPosition(position);
-                            Log.d("init", itemValue.m_timeStart);
-                        }
-
-                    });
-
                     break;
             }
             detailed_class_list.addView(item);
@@ -152,7 +202,26 @@ public class DetailedClassFragment extends Fragment {
         getActivity().setTitle("");
         return view;
     }
+    private AdapterView.OnItemClickListener mGroupClickListener = new AdapterView.OnItemClickListener() {
 
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view,
+        int position, long id) {
+            Group tmpGroup = (Group)mGroupListAdapter.getItem(position);
+
+            Log.d("init", tmpGroup.toString());
+            new ServerGetTable(tmpGroup, getFragmentManager(), getActivity()).execute();
+        }
+
+    };
+    private View.OnClickListener mLectClickListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View view) {
+            new ServerGetTable(mLesson.m_teacher, getFragmentManager(), getActivity()).execute();
+        }
+
+    };
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {

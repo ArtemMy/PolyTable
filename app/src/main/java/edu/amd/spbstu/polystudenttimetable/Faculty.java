@@ -1,6 +1,8 @@
 package edu.amd.spbstu.polystudenttimetable;
 
-public class Faculty
+import java.io.Serializable;
+
+public class Faculty implements Serializable
 {
   public String   m_name;
   public int      m_id;

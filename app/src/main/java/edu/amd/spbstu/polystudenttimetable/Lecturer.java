@@ -1,8 +1,9 @@
 package edu.amd.spbstu.polystudenttimetable;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Lecturer
+public class Lecturer implements Serializable
 {
     public String   m_chair;
     public String   m_fio;

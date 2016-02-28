@@ -1,5 +1,6 @@
 package edu.amd.spbstu.polystudenttimetable;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
@@ -22,22 +23,25 @@ import java.util.ArrayList;
  */
 public class ServerGetTable extends AsyncTask<Void, String, String>
 {
-    private Fragment m_ctx;
+    private FragmentManager fm;
+    private Activity mAct;
     private ProgressDialog pb;
     private Group m_group;
     private Lecturer m_lect;
 
     private boolean isGroup;
 
-    public ServerGetTable(Group group, Fragment ctx)
+    public ServerGetTable(Group group, FragmentManager fm, Activity act)
     {
         m_group = group;
-        m_ctx = ctx;
+        this.fm = fm;
+        mAct = act;
         isGroup = true;
     }
-    public ServerGetTable(Lecturer lecturer, Fragment ctx)
+    public ServerGetTable(Lecturer lecturer, FragmentManager fm, Activity act)
     {
-        m_ctx = ctx;
+        this.fm = fm;
+        mAct = act;
         m_lect = lecturer;
         isGroup = false;
     }
@@ -91,8 +95,9 @@ public class ServerGetTable extends AsyncTask<Void, String, String>
             JSONObject objWeek = (JSONObject) objRoot.get("week");
             JSONArray arrDays = (JSONArray) objRoot.get("days");
 
-            for (int d = 0; d < 6; d++) {
+            for (int d = 0; d < arrDays.length(); d++) {
                 JSONObject dayWeek = (JSONObject) arrDays.getJSONObject(d);
+                int dayInt = (int) dayWeek.get("weekday") - 1;
                 JSONArray arrLessons = (JSONArray) dayWeek.get("lessons");
                 int numLes = arrLessons.length();
                 for (int i = 0; i < numLes; i++) {
@@ -102,48 +107,55 @@ public class ServerGetTable extends AsyncTask<Void, String, String>
                     strTimeStart = (String) objLesson.get("time_start");
                     strTimeEnd = (String) objLesson.get("time_end");
 
-                    strTeacherFIO = "";
-                    JSONArray arrTeachers = (JSONArray) objLesson.get("teachers");
-                    int numTeachers = arrTeachers.length();
-                    for (int t = 0; t < numTeachers; t++) {
-                        JSONObject objTeacher = (JSONObject) arrTeachers.getJSONObject(t);
-                        strTeacherFIO = (String) objTeacher.get("full_name");
+                    Lecturer lect = new Lecturer();
+                    if(!objLesson.getString("teachers").equals("null")) {
+                        JSONArray arrTeachers = objLesson.getJSONArray("teachers");
+                        int numTeachers = arrTeachers.length();
+                        for (int t = 0; t < numTeachers; t++) {
+                            JSONObject objTeacher = (JSONObject) arrTeachers.getJSONObject(t);
+                            lect.m_id = (int) objTeacher.get("id");
+                            lect.m_fio = (String) objTeacher.get("full_name");
+                            lect.m_chair = (String) objTeacher.get("chair");
+                        }
                     }
-
                     strRoomName = "";
                     strBldName = "";
-                    JSONArray arrRooms = (JSONArray) objLesson.get("auditories");
-                    int numRooms = arrRooms.length();
-                    for (int r = 0; r < numRooms; r++) {
-                        JSONObject objRoom = (JSONObject) arrRooms.getJSONObject(r);
-                        strRoomName = (String) objRoom.get("name");
-                        JSONObject objBuilding = (JSONObject) objRoom.get("building");
-                        strBldName = (String) objBuilding.get("abbr");
-                    } // for (r) rooms
-
+                    if(!objLesson.getString("auditories").equals("null")) {
+                        JSONArray arrRooms = (JSONArray) objLesson.get("auditories");
+                        int numRooms = arrRooms.length();
+                        for (int r = 0; r < numRooms; r++) {
+                            JSONObject objRoom = (JSONObject) arrRooms.getJSONObject(r);
+                            strRoomName = (String) objRoom.get("name");
+                            JSONObject objBuilding = (JSONObject) objRoom.get("building");
+                            strBldName = (String) objBuilding.get("abbr");
+                        } // for (r) rooms
+                    }
                     lesson = new Lesson();
 
-                    JSONArray arrGroups = (JSONArray) objLesson.get("groups");
-                    int numGroups = arrGroups.length();
-                    for (int t = 0; t < numGroups; t++) {
-                        JSONObject objGroup = (JSONObject) arrGroups.getJSONObject(t);
-                        Group g = new Group();
-                        g.m_name = (String) objGroup.get("name");
-                        g.m_id = (int) objGroup.get("id");
-                        g.m_spec = (String) objGroup.get("spec");
-                        lesson.m_list_groups.add(g);
+                    if(!objLesson.getString("groups").equals("null")) {
+                        JSONArray arrGroups = (JSONArray) objLesson.get("groups");
+                        int numGroups = arrGroups.length();
+                        for (int t = 0; t < numGroups; t++) {
+                            JSONObject objGroup = (JSONObject) arrGroups.getJSONObject(t);
+                            Group g = new Group();
+                            g.m_name = (String) objGroup.get("name");
+                            g.m_id = (int) objGroup.get("id");
+                            String arr[] = ((String)objGroup.get("spec")).split(" ", 2);
+                            g.m_spec_number = arr[0];
+                            g.m_spec    = arr[1];
+                            lesson.m_list_groups.add(g);
+                        }
                     }
-
                     Log.d("init s", "add lesson");
                     lesson.m_subject = strSubject;
-                    lesson.m_teacherFio = strTeacherFIO;
+                    lesson.m_teacher = lect;
                     if (listLessons.contains(lesson)) {
                         int ind = listLessons.indexOf(lesson);
                         lesson = listLessons.get(ind);
-                        lesson.add(d, lessonType, strTimeStart, strTimeEnd, strRoomName, strBldName);
+                        lesson.add(dayInt, lessonType, strTimeStart, strTimeEnd, strRoomName, strBldName);
                         listLessons.set(ind, lesson);
                     } else {
-                        lesson.add(d, lessonType, strTimeStart, strTimeEnd, strRoomName, strBldName);
+                        lesson.add(dayInt, lessonType, strTimeStart, strTimeEnd, strRoomName, strBldName);
                         listLessons.add(lesson);
                     }
                 }   // for (i) num lessons in day
@@ -162,15 +174,16 @@ public class ServerGetTable extends AsyncTask<Void, String, String>
         Log.d("TT", "Read completed with" + strResult.substring(0, 128));
         ArrayList<Lesson> listLesson = parseJson(strResult);
         pb.dismiss();
-        FragmentManager fragmentManager = m_ctx.getFragmentManager();
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        FragmentTransaction transaction = fm.beginTransaction();
         if(isGroup) {
             m_group.m_listLessons = listLesson;
             transaction.replace(R.id.container, TimeTableFragment.newInstance(m_group));
+            StaticStorage.m_recentGroups.add(m_group);
         }
         else {
             m_lect.m_listLessons = listLesson;
             transaction.replace(R.id.container, TimeTableFragment.newInstance(m_lect));
+            StaticStorage.m_recentLecturers.add(m_lect);
         }
         transaction.addToBackStack(null);
         transaction.commit();
@@ -178,7 +191,7 @@ public class ServerGetTable extends AsyncTask<Void, String, String>
     @Override
     protected void onPreExecute()
     {
-        pb = new ProgressDialog(m_ctx.getActivity());
+        pb = new ProgressDialog(mAct);
         pb.setMessage("downloading ...");
         pb.show();
     }

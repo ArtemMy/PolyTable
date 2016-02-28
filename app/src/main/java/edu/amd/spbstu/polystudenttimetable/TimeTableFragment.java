@@ -6,6 +6,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -110,18 +111,17 @@ public class TimeTableFragment extends Fragment
         initTable();
         mOnCreateCalled = true;
 
-        getActivity().setTitle(mTitle);
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(mTitle);
 
         return mRootView;
     }
 
     private void initTable ()
     {
+        if(mAllClasses != null)
+            mAllClasses.clear();
         int w = calendarManager.getSelectedDay().getDayOfWeek() - 1;
         mDay = calendarManager.getSelectedDay();
-        if(w == 6) {
-            return;
-        }
 
         Log.d("init", String.valueOf(mLessonList.size()));
         mAllClasses = new ArrayList<RegLessonInstance>();
@@ -132,18 +132,15 @@ public class TimeTableFragment extends Fragment
         }
         Log.d("init", String.valueOf(mAllClasses.size()));
 
-        daytableView = (ListView)mRootView.findViewById(R.id.daytable_view);
+        daytableView = (ListView) mRootView.findViewById(R.id.daytable_view);
+
 //        daytableView.setItemAnimator(new DefaultItemAnimator());
 //        daytableView.setHasFixedSize(true);
 
-//        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
-//        daytableView.setLayoutManager(layoutManager);
-
-//        DayTableAdapter adapter = new DayTableAdapter(mAllClasses, mDay, currentLesson);
         DayTableListAdapter adapter = new DayTableListAdapter(getActivity(), mAllClasses, mDay, daytableView);
         daytableView.setAdapter(adapter);
         registerForContextMenu(daytableView);
-
+        daytableView.setEmptyView(mRootView.findViewById(R.id.empty_class_view));
     }
 
     @Override

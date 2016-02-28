@@ -1,0 +1,108 @@
+<resources>
+    <string name="app_name">Студенческое расписание</string>
+    <string name="action_settings">Настройки</string>
+    <string name="str_depth">Кафедра Прикладной Математики</string>
+    <string name="str_university1">Санкт-Петербургский Государственный</string>
+    <string name="str_university2">Политехнический Университет</string>
+    <string name="str_toweb">На сайт</string>
+    <string name="str_start">Старт</string>
+    <string name="str_restart">Заново</string>
+    <string name="str_score">Счет</string>
+    <string name="str_moves">Ходов</string>
+    <string name="str_total">Всего</string>
+    <string name="str_combo">Комбо</string>
+    <string name="navigation_drawer_open">Открыть шторку</string>
+    <string name="navigation_drawer_close">Закрыть шторку</string>
+
+    <string name="header_text">дней до экзамена</string>
+
+    <string name="placeholder_downloading">Загрузка..</string>
+
+    <string name="placeholder_turn_on_internet">Включите интернет</string>
+
+    <string-array name="week_day_array">
+        <item>Понедельник</item>
+        <item>Вторник</item>
+        <item>Среда</item>
+        <item>Четверг</item>
+        <item>Пятница</item>
+        <item>Суббота</item>
+    </string-array>
+
+    <string-array name="abbr_week_day_array">
+        <item>Пн</item>
+        <item>Вт</item>
+        <item>Ср</item>
+        <item>Чт</item>
+        <item>Пт</item>
+        <item>Сб</item>
+    </string-array>
+
+    <string-array name="lesson_type">
+        <item>Практика</item>
+        <item>Теория</item>
+        <item>Лаб</item>
+    </string-array>
+
+    <string name="lesson_menu_title">Изменить занятие</string>
+    <string name="lesson_menu_imp">Пометить как важное</string>
+    <string name="lesson_menu_hw">Домашняя работа</string>
+    <string name="lesson_menu_canc">Отменить занятие</string>
+
+    <string-array name="class_time_array">
+        <item>08:00 - 09:30</item>
+        <item>10:00 - 11:30</item>
+        <item>12:00 - 13:30</item>
+        <item>14:00 - 15:30</item>
+        <item>16:00 - 17:30</item>
+    </string-array>
+
+    <string-array name="class_details">
+        <item>Преподаватель</item>
+        <item>Группы</item>
+        <item>Занятия</item>
+    </string-array>
+
+    <string name="group_search_placeholder">Номер группы:</string>
+    <string name="lecturer_search_placeholder">Имя преподавателя:</string>
+
+    <string name="search_recent_title">Недавние:</string>
+    <string name="error_title">Ошибка</string>
+
+    <string name="search">Поиск</string>
+    <string name="login">Вход</string>
+    <string name="about">На главную</string>
+
+    <string name="cancel">Отменить</string>
+    <string name="importnant">Пометить как важное</string>
+    <string name="homework">Домашняя работа</string>
+
+    <string name="groups">Группы</string>
+    <string name="lect">Преподаватели</string>
+
+    <string name="empty_class">Занятий нет</string>
+
+    <style name="ExpandedAppBar" parent="@android:style/TextAppearance.Medium">
+        <item name="android:textSize">28sp</item>
+        <item name="android:textColor">#000</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="CollapsedAppBar" parent="@android:style/TextAppearance.Medium">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <style name="ExpandedAppBarPlus1" parent="@android:style/TextAppearance.Medium">
+        <item name="android:textSize">28.5sp</item>
+        <item name="android:textColor">#000</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="CollapsedAppBarPlus1" parent="@android:style/TextAppearance.Medium">
+        <item name="android:textSize">24.5sp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+</resources>

@@ -5,6 +5,10 @@ import java.util.ArrayList;
 
 public class StaticStorage implements Serializable
 {
+    public static ArrayList<Group>     m_recentGroups = new ArrayList<Group>();
+    public static ArrayList<Lecturer>  m_recentLecturers = new ArrayList<Lecturer>();
+
+
     public static boolean m_isInitialized = false;
     public static ArrayList<Faculty>    m_listFaculties = new ArrayList<Faculty>();
 

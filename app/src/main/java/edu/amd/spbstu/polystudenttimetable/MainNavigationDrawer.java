@@ -10,6 +10,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.design.widget.AppBarLayout;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
@@ -24,14 +27,15 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
-
+/*
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.drive.Drive;
-
+*/
 import org.joda.time.DateTimeConstants;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
@@ -48,19 +52,22 @@ public class MainNavigationDrawer extends AppCompatActivity
 //    GoogleApiClient mGoogleApiClient;
 
     private static final int REQUEST_CODE_RESOLUTION = 3;
-
     public void onFragmentInteraction(Uri uri)
     {
         return;
     }
+    private SearchTabFragment mSTF;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main_navigation_drawer);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        mSTF = new SearchTabFragment();
+        getSupportActionBar().setTitle("");
         /*
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -192,16 +199,24 @@ public class MainNavigationDrawer extends AppCompatActivity
         FragmentManager fragmentManager = getFragmentManager();
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-
         if (id == R.id.nav_search) {
+            FragmentManager fm = getFragmentManager();
+            for(int i = 0; i < fm.getBackStackEntryCount(); ++i) {
+                fm.popBackStack();
+            }
             fragment = new SearchTabFragment();
-        }
-        if(fragment != null) {
-            ViewGroup vg = (ViewGroup) findViewById(R.id.container);
-            vg.removeAllViews();
-            fragmentManager.beginTransaction()
+            Log.d("init", "begin transaction");
+            getFragmentManager().beginTransaction()
                     .replace(R.id.container, fragment)
                     .commit();
+        }
+        else if (id == R.id.nav_about) {
+            FragmentManager fm = getFragmentManager();
+            for (int i = 0; i < fm.getBackStackEntryCount(); ++i) {
+                fm.popBackStack();
+            }
+            Intent i = new Intent(this, ActivityMain.class);
+            startActivity(i);
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -229,13 +244,6 @@ public class MainNavigationDrawer extends AppCompatActivity
         ft.replace(R.id.container, fragment, fragment.toString());
         ft.addToBackStack(null);
         ft.commit();
-    }
-
-    protected void setToolbarTitle(String s) {
-        Toolbar tb = (Toolbar) findViewById(R.id.toolbar);
-        tb.setTitle(s);
-        super.onStart();
-//        mGoogleApiClient.connect();
     }
 
     /*

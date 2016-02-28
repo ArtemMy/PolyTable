@@ -23,8 +23,10 @@ import com.wefika.calendar.widget.DayView;
 import com.wefika.calendar.widget.WeekView;
 
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.LocalDate;
+import org.joda.time.Weeks;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -212,7 +214,13 @@ public class CollapseCalendarView extends LinearLayout implements View.OnClickLi
             mPrev.setEnabled(mManager.hasPrev());
             mNext.setEnabled(mManager.hasNext());
 
-            mTitleView.setText(mManager.getHeaderText());
+            DateTime t;
+            if(LocalDate.now().getMonthOfYear() > 8)
+                t = new DateTime(DateTime.now().getYear(), 9, 1, 1, 1);
+            else
+                t = new DateTime(DateTime.now().getYear(), 2, 1, 1, 1);
+
+            mTitleView.setText(String.valueOf(Weeks.weeksBetween(t.toLocalDate(), getSelectedDate()).getWeeks()) + " " + getResources().getString(R.string.week));
 
             if (mManager.getState() == CalendarManager.State.MONTH) {
                 populateMonthLayout((Month) mManager.getUnits());

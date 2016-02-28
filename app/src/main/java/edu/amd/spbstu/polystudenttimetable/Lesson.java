@@ -18,22 +18,25 @@ public class Lesson implements Serializable
     public Map<Integer, List<RegLessonInstance> > m_reg;
 
     public List<Group> m_list_groups;
-    public String   m_subject;
-    public String   m_teacherFio;
+    public String      m_subject;
+    public Lecturer    m_teacher;
 
     public Lesson()
     {
         m_subject       = "";
-        m_teacherFio    = "";
+        m_teacher    = new Lecturer();
         m_reg = new HashMap<Integer, List<RegLessonInstance> >();
         m_list_groups = new ArrayList<Group>();
     }
 
-//    @Override
-    public boolean equals(Lesson sl){
-        return (m_subject.equals(sl.m_subject) && m_teacherFio.equals(sl.m_teacherFio));
+    @Override
+    public boolean equals(Object sl){
+        return (m_subject.equals(((Lesson)sl).m_subject) && m_teacher.m_fio.equals(((Lesson)sl).m_teacher.m_fio));
     }
-
+    @Override
+    public int hashCode() {
+        return (this.m_subject + this.m_teacher.m_fio).hashCode();
+    }
     public void add(int d, int lessonType, String strTimeStart, String strTimeEnd, String strRoomName, String strBldName) {
         RegLessonInstance reg = new RegLessonInstance(this);
         reg.m_day = d;
