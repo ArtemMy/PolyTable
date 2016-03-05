@@ -1,5 +1,6 @@
 package edu.amd.spbstu.polystudenttimetable;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
@@ -8,9 +9,11 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.MediaStore;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -29,13 +32,13 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-/*
+
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.drive.Drive;
-*/
+
 import org.joda.time.DateTimeConstants;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
@@ -45,18 +48,21 @@ public class MainNavigationDrawer extends AppCompatActivity
         DetailedClassFragment.OnFragmentInteractionListener,
         TimeTableFragment.OnFragmentInteractionListener,
         SearchFragment.OnFragmentInteractionListener {
-//       GoogleApiClient.ConnectionCallbacks,
-//        GoogleApiClient.OnConnectionFailedListener {
+
 
 //    DBHelper dbHelper;
-//    GoogleApiClient mGoogleApiClient;
 
+    private static final int REQUEST_CODE_CAPTURE_IMAGE = 1;
+    private static final int REQUEST_CODE_CREATOR = 2;
     private static final int REQUEST_CODE_RESOLUTION = 3;
+
     public void onFragmentInteraction(Uri uri)
     {
         return;
     }
     private SearchTabFragment mSTF;
+
+    GoogleApiClient mGoogleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +74,7 @@ public class MainNavigationDrawer extends AppCompatActivity
         setSupportActionBar(toolbar);
         mSTF = new SearchTabFragment();
         getSupportActionBar().setTitle("");
+
         /*
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -87,15 +94,7 @@ public class MainNavigationDrawer extends AppCompatActivity
 
 //        dbHelper = new DBHelper(this);
 
-/*
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Drive.API)
-                .addScope(Drive.SCOPE_FILE)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
-*/
-        StaticStorage.clear();
+       StaticStorage.clear();
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
 
@@ -110,9 +109,21 @@ public class MainNavigationDrawer extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         Log.d("init", "begin transaction");
-        getFragmentManager().beginTransaction()
-                    .replace(R.id.container, new SearchTabFragment())
-                    .commit();
+        if (mGoogleApiClient == null) {
+            LoginFragment lf = new LoginFragment();
+            FragmentTransaction ft = getFragmentManager().beginTransaction();
+            ft.add(R.id.container, lf, "login");
+            ft.addToBackStack(null);
+            ft.commit();
+            navigationView.getMenu().getItem(0).setChecked(true);
+        } else {
+            SearchFragment lf = new SearchFragment();
+            FragmentTransaction ft = getFragmentManager().beginTransaction();
+            ft.add(R.id.container, lf, lf.toString());
+            ft.addToBackStack(null);
+            ft.commit();
+            navigationView.getMenu().getItem(1).setChecked(true);
+        }
     }
 
     @Override
@@ -121,39 +132,7 @@ public class MainNavigationDrawer extends AppCompatActivity
         super.onStart();
 //        mGoogleApiClient.connect();
     }
-    /*
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        if (connectionResult.hasResolution()) {
-            try {
-                connectionResult.startResolutionForResult(this, REQUEST_CODE_RESOLUTION);
-            } catch (IntentSender.SendIntentException e) {
-                // Unable to resolve, message user appropriately
-            }
-        } else {
-            GooglePlayServicesUtil.getErrorDialog(connectionResult.getErrorCode(), this, 0).show();
-        }
-    }
-    @Override
-    public void onConnectionSuspended(int cause) {
-        Log.i("init", "GoogleApiClient connection suspended");
-    }
-    @Override
-    public void onConnected(Bundle connectionHint) {
-        Log.i("init", "API client connected.");
-    }
-    @Override
-    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
-        Log.d("init", "onActivityResult");
-        switch (requestCode) {
-            case REQUEST_CODE_RESOLUTION:
-                if (resultCode == RESULT_OK) {
-                    mGoogleApiClient.connect();
-                }
-                break;
-        }
-    }
-    */
+
 
     @Override
     public void onBackPressed() {
@@ -200,15 +179,11 @@ public class MainNavigationDrawer extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
         if (id == R.id.nav_search) {
-            FragmentManager fm = getFragmentManager();
-            for(int i = 0; i < fm.getBackStackEntryCount(); ++i) {
-                fm.popBackStack();
-            }
-            fragment = new SearchTabFragment();
-            Log.d("init", "begin transaction");
-            getFragmentManager().beginTransaction()
-                    .replace(R.id.container, fragment)
-                    .commit();
+//            FragmentManager fm = getFragmentManager();
+//            for(int i = 0; i < fm.getBackStackEntryCount(); ++i) {
+//                fm.popBackStack();
+//            }
+            switchContent(new SearchTabFragment());
         }
         else if (id == R.id.nav_about) {
             FragmentManager fm = getFragmentManager();
@@ -217,6 +192,12 @@ public class MainNavigationDrawer extends AppCompatActivity
             }
             Intent i = new Intent(this, ActivityMain.class);
             startActivity(i);
+        }
+        else if (id == R.id.nav_login) {
+            FragmentTransaction ft = getFragmentManager().beginTransaction();
+            ft.replace(R.id.container, fragment, "login");
+            ft.addToBackStack(null);
+            ft.commit();
         }
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -246,6 +227,26 @@ public class MainNavigationDrawer extends AppCompatActivity
         ft.commit();
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.i("google_drive_on_act_res", "hereherehere in activity");
+        switch(requestCode)
+        {
+            case LoginFragment.REQUEST_CODE_CAPTURE_IMAGE:
+            case LoginFragment.REQUEST_CODE_CREATOR:
+            case LoginFragment.REQUEST_CODE_RESOLUTION:
+            case LoginFragment.REQUEST_CODE_OPENER:
+                LoginFragment fragment = (LoginFragment) getFragmentManager()
+                        .findFragmentByTag("login");
+                LoginFragment lf = new LoginFragment();
+                lf.toString();
+                fragment.onActivityResult(requestCode, resultCode, data);
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+                break;
+        }
+    }
     /*
     // database
 
