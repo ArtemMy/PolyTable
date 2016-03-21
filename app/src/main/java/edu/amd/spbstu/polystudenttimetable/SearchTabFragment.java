@@ -25,7 +25,7 @@ public class SearchTabFragment extends Fragment {
     private View mRootView;
     private ViewPagerAdapter adapter;
     private SearchFragment mGroupFrag, mLectFrag;
-
+    private static final String TAG = "polytable_log";
     public SearchTabFragment() {
         // Required empty public constructor
     }
@@ -33,7 +33,7 @@ public class SearchTabFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("init", "tab search fragment onCreate");
+        Log.d("TAG", "tab search fragment onCreate");
     }
 
     @Override
@@ -50,25 +50,22 @@ public class SearchTabFragment extends Fragment {
             tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
         }
 
-        if(viewPager == null) {
-            viewPager = (ViewPager) mRootView.findViewById(R.id.viewpager);
-            if (adapter == null || adapter.getCount() != 2) {
-                adapter = new ViewPagerAdapter(getActivity().getFragmentManager());
-                Log.d("init", String.valueOf(adapter.getCount()));
+        viewPager = (ViewPager) mRootView.findViewById(R.id.viewpager);
+        viewPager.removeAllViews();
+        adapter = new ViewPagerAdapter(getChildFragmentManager());
+        Log.d("TAG", String.valueOf(adapter.getCount()));
 
-                if(mGroupFrag == null)
-                    mGroupFrag = SearchFragment.newInstance("", 0);
-                if(mLectFrag == null)
-                    mLectFrag = SearchFragment.newInstance("", 1);
+        if(mGroupFrag == null)
+            mGroupFrag = SearchFragment.newInstance("", 0);
+        if(mLectFrag == null)
+            mLectFrag = SearchFragment.newInstance("", 1);
 
-                adapter.addFragment(mGroupFrag, getResources().getString(R.string.groups));
-                adapter.addFragment(mLectFrag, getResources().getString(R.string.lect));
+        adapter.addFragment(mGroupFrag, getResources().getString(R.string.groups));
+        adapter.addFragment(mLectFrag, getResources().getString(R.string.lect));
 
-                Log.d("init", String.valueOf(adapter.getCount()));
-            }
-            viewPager.setAdapter(adapter);
-            tabLayout.setupWithViewPager(viewPager);
-        }
+        Log.d("TAG", String.valueOf(adapter.getCount()));
+        viewPager.setAdapter(adapter);
+        tabLayout.setupWithViewPager(viewPager);
 
 /*        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {

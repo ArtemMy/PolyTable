@@ -5,9 +5,15 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.IntentSender;
 import android.os.AsyncTask;
+import android.support.design.widget.NavigationView;
 import android.util.Log;
 import android.widget.ArrayAdapter;
+
+import com.google.android.gms.drive.Drive;
+import com.google.android.gms.drive.DriveFolder;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -23,30 +29,30 @@ import java.util.ArrayList;
  */
 public class ServerGetTable extends AsyncTask<Void, String, String>
 {
-    private FragmentManager fm;
     private Activity mAct;
     private ProgressDialog pb;
-    private Group m_group;
-    private Lecturer m_lect;
+    private GroupInfo m_group;
+    private LecturerInfo m_lect;
 
     private boolean isGroup;
 
-    public ServerGetTable(Group group, FragmentManager fm, Activity act)
+    public ServerGetTable(GroupInfo group, Activity act)
     {
         m_group = group;
-        this.fm = fm;
         mAct = act;
         isGroup = true;
     }
-    public ServerGetTable(Lecturer lecturer, FragmentManager fm, Activity act)
+    public ServerGetTable(LecturerInfo lecturer, Activity act)
     {
-        this.fm = fm;
         mAct = act;
         m_lect = lecturer;
         isGroup = false;
     }
     protected String doInBackground(Void... v)
     {
+        if(isCancelled())
+            return null;
+
         String strUrl;
         if(isGroup)
             strUrl = "http://ruz2.spbstu.ru/api/v1/ruz/scheduler/" + String.valueOf(m_group.m_id);
@@ -107,7 +113,7 @@ public class ServerGetTable extends AsyncTask<Void, String, String>
                     strTimeStart = (String) objLesson.get("time_start");
                     strTimeEnd = (String) objLesson.get("time_end");
 
-                    Lecturer lect = new Lecturer();
+                    LecturerInfo lect = new LecturerInfo();
                     if(!objLesson.getString("teachers").equals("null")) {
                         JSONArray arrTeachers = objLesson.getJSONArray("teachers");
                         int numTeachers = arrTeachers.length();
@@ -137,12 +143,20 @@ public class ServerGetTable extends AsyncTask<Void, String, String>
                         int numGroups = arrGroups.length();
                         for (int t = 0; t < numGroups; t++) {
                             JSONObject objGroup = (JSONObject) arrGroups.getJSONObject(t);
-                            Group g = new Group();
+                            GroupInfo g = new GroupInfo();
                             g.m_name = (String) objGroup.get("name");
                             g.m_id = (int) objGroup.get("id");
-                            String arr[] = ((String)objGroup.get("spec")).split(" ", 2);
-                            g.m_spec_number = arr[0];
-                            g.m_spec    = arr[1];
+                            if(!((String)objGroup.get("spec")).equals("")) {
+                                String arr[] = ((String)objGroup.get("spec")).split(" ", 2);
+                                g.m_spec_number    = arr[0];
+                                if(arr.length > 1)
+                                    g.m_spec    = arr[1];
+                            }
+                            g.m_level   = (int)objGroup.get("level");
+                            JSONObject objFac = (JSONObject) objGroup.get("faculty");
+                            g.m_faculty.m_name = (String) objFac.get("name");
+                            g.m_faculty.m_id = (int) objGroup.get("id");
+                            g.m_faculty.m_abbr = (String) objFac.get("abbr");
                             lesson.m_list_groups.add(g);
                         }
                     }
@@ -171,30 +185,65 @@ public class ServerGetTable extends AsyncTask<Void, String, String>
     @Override
     protected void onPostExecute(String strResult)
     {
-        Log.d("TT", "Read completed with" + strResult.substring(0, 128));
+        if(isCancelled())
+            return;
+        if(strResult == null) {
+            pb.dismiss();
+            return;
+        }
+//        Log.d("TT", "Read completed with" + strResult.substring(0, 128));
         ArrayList<Lesson> listLesson = parseJson(strResult);
         pb.dismiss();
-        FragmentTransaction transaction = fm.beginTransaction();
-        if(isGroup) {
-            m_group.m_listLessons = listLesson;
-            transaction.replace(R.id.container, TimeTableFragment.newInstance(m_group));
-            StaticStorage.m_recentGroups.add(m_group);
+        if (((NavigationView) mAct.findViewById(R.id.nav_view)).getMenu().getItem(0).isChecked()) {
+            if (isGroup) {
+                Group group = new Group();
+                group.m_info = m_group;
+                group.m_listLessons = listLesson;
+                new CreateFiles(mAct, group).execute();
+            } else {
+                Lecturer lect = new Lecturer();
+                lect.m_info = m_lect;
+                lect.m_listLessons = listLesson;
+                new CreateFiles(mAct, lect).execute();
+            }
+        } else {
+            if (isGroup) {
+                Group group = new Group();
+                group.m_info = m_group;
+                group.m_listLessons = listLesson;
+                StaticStorage.m_recentGroups.put(group.m_info.m_id, group);
+                LocalPersistence.writeObjectToFile(mAct.getApplicationContext(), StaticStorage.m_recentGroups, "recent_groups.data");
+                ((MainNavigationDrawer) mAct).switchContent(TimeTableFragment.newInstance(group));
+            } else {
+                Lecturer lect = new Lecturer();
+                lect.m_info = m_lect;
+                lect.m_listLessons = listLesson;
+                StaticStorage.m_recentLecturers.put(lect.m_info.m_id, lect);
+                LocalPersistence.writeObjectToFile(mAct.getApplicationContext(), StaticStorage.m_recentLecturers, "recent_lects.data");
+                ((MainNavigationDrawer) mAct).switchContent(TimeTableFragment.newInstance(lect));
+            }
         }
-        else {
-            m_lect.m_listLessons = listLesson;
-            transaction.replace(R.id.container, TimeTableFragment.newInstance(m_lect));
-            StaticStorage.m_recentLecturers.add(m_lect);
-        }
-        transaction.addToBackStack(null);
-        transaction.commit();
     }
     @Override
     protected void onPreExecute()
     {
+        if(!((MainNavigationDrawer)mAct).isOnline()) {
+            ((MainNavigationDrawer) mAct).askForInternet();
+            cancel(true);
+            return;
+        }
+
         pb = new ProgressDialog(mAct);
-        pb.setMessage("downloading ...");
+        pb.setMessage(mAct.getResources().getString(R.string.placeholder_downloading));
+
+        pb.setCancelable(true);
+        pb.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                cancel(true);
+            }
+        });
         pb.show();
     }
 
 }
-

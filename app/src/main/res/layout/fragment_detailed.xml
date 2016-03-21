@@ -12,7 +12,7 @@
             android:id="@+id/detailed_collapsing_toolbar"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_scrollFlags="snap|scroll|exitUntilCollapsed"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed"
             app:expandedTitleTextAppearance="@style/TextAppearance.AppCompat.Title"
             >
 
@@ -23,7 +23,7 @@
                 android:id="@+id/collapsing_lin_lay"
                 android:gravity="bottom"
                 android:background="@color/colorPrimary">
-                <TextView xmlns:android="http://schemas.android.com/apk/res/android"
+                <EditText xmlns:android="http://schemas.android.com/apk/res/android"
                     android:id="@+id/detailed_title"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -32,6 +32,8 @@
                     android:paddingRight="10dp"
                     android:elegantTextHeight="true"
                     android:textSize="22sp"
+                    android:background="@android:color/transparent"
+                    android:editable="false"
                     android:textColor="#FFFFFF"
                     />
             </LinearLayout>
@@ -51,4 +53,15 @@
         android:orientation="vertical">
         </LinearLayout>
     </android.support.v4.widget.NestedScrollView>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/edit_fab"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:src="@android:drawable/ic_menu_edit"
+        app:layout_anchor="@id/detailed_app_bar_layout"
+        android:layout_marginRight="20dp"
+        app:layout_behavior="edu.amd.spbstu.polystudenttimetable.FABBehavior"
+        app:layout_anchorGravity="bottom|right|end"
+        />
 </android.support.design.widget.CoordinatorLayout>

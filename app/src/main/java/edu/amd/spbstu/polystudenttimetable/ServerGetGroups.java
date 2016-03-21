@@ -55,10 +55,10 @@ public class ServerGetGroups extends AsyncTask<Faculty, String, String>
         }
         return null;
     }
-    private ArrayList<Group> parseJson(String strJson)
+    private ArrayList<GroupInfo> parseJson(String strJson)
     {
-        ArrayList<Group>       listGroups = new ArrayList<Group>();
-        Group                  group;
+        ArrayList<GroupInfo>       listGroups = new ArrayList<GroupInfo>();
+        GroupInfo                  group;
 
         try
         {
@@ -71,7 +71,7 @@ public class ServerGetGroups extends AsyncTask<Faculty, String, String>
                 JSONObject objGr;
 
                 objGr = arrGroups.optJSONObject(i);
-                group = new Group();
+                group = new GroupInfo();
                 group.m_name    = (String)objGr.get("name");
                 group.m_id      = (int)objGr.get("id");
                 group.m_level   = (int)objGr.get("level");
@@ -93,9 +93,9 @@ public class ServerGetGroups extends AsyncTask<Faculty, String, String>
             Log.d("TT", ex.getMessage());
             ex.printStackTrace();
         }
-        Comparator<Group> compGroups = new Comparator<Group>() {
+        Comparator<GroupInfo> compGroups = new Comparator<GroupInfo>() {
             @Override
-            public int compare(Group lhs, Group rhs)
+            public int compare(GroupInfo lhs, GroupInfo rhs)
             {
                 if (lhs.m_level < rhs.m_level)
                     return -1;
@@ -118,7 +118,7 @@ public class ServerGetGroups extends AsyncTask<Faculty, String, String>
     {
         Log.d("TT", "Read completed with" + strResult.substring(0, 128));
         //m_textView.setText(strResult);
-        ArrayList<Group> listGroups = parseJson(strResult);
+        ArrayList<GroupInfo> listGroups = parseJson(strResult);
 
         ArrayList<Faculty>      listFaculties = StaticStorage.m_listFaculties;
         int                     i, n;
@@ -126,9 +126,13 @@ public class ServerGetGroups extends AsyncTask<Faculty, String, String>
         n = listGroups.size();
         for (i = 0; i < n; i++)
         {
-            Group group = listGroups.get(i);
-            StaticStorage.m_listGroups.add(group);
-            m_adapterGroups.add(group.m_name);
+            GroupInfo grp = listGroups.get(i);
+            StaticStorage.m_listGroups.add(grp);
+            m_adapterGroups.add(grp.m_name);
+            if(grp.m_spec.contains("Прикладная математика")) {
+                StaticStorage.m_primatGroups.add(grp);
+                StaticStorage.m_primatGroupsName.add(grp.m_name);
+            }
         }
         m_adapterGroups.notifyDataSetChanged();
     }

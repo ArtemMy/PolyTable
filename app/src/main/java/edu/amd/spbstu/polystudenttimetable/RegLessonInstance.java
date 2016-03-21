@@ -24,6 +24,19 @@ public class RegLessonInstance implements Serializable{
         EVEN,
         ALL
     }
+
+    Homework newHomework() {
+        return new Homework();
+    }
+
+    public class Homework implements Serializable{
+        public Homework() {
+            m_task = "";
+        }
+
+        public CharSequence m_task;
+    }
+
     public Lesson parent;
 
     public int      m_day;  // 0, 1, 2, 3, 4, 5
@@ -36,7 +49,7 @@ public class RegLessonInstance implements Serializable{
 
     public Map<LocalDate, Boolean> m_isCanceled;
     public Map<LocalDate, Boolean> m_isImportant;
-    public Map<LocalDate, String> m_isHomework;
+    public Map<LocalDate, Homework> m_homework;
 
     public RegLessonInstance(Lesson lesson)
     {
@@ -49,7 +62,7 @@ public class RegLessonInstance implements Serializable{
         m_buildingName = "";
         m_isCanceled = new HashMap<LocalDate, Boolean>();
         m_isImportant = new HashMap<LocalDate, Boolean>();
-        m_isHomework = new HashMap<LocalDate, String>();
+        m_homework = new HashMap<LocalDate, Homework>();
         weekly = weekly_t.ALL;
     }
 }

@@ -16,6 +16,18 @@
         android:singleLine="true"
         android:imeOptions="actionSearch"
         android:ellipsize="end"/>
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceButton"
+        android:text="@string/str_depth"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_margin="10dp"
+        android:background="#009688"
+        android:id="@+id/primat_list"
+        android:layout_gravity="center_horizontal" />
 
     <TextView
         android:layout_width="match_parent"
@@ -31,5 +43,4 @@
         android:layout_height="wrap_content"
         android:id="@+id/recentList"
         android:layout_gravity="center_horizontal" />
-
 </LinearLayout>

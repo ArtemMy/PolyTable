@@ -19,10 +19,13 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
     <string name="placeholder_downloading">Downloading..</string>
+    <string name="placeholder_saving">Saving..</string>
 
     <string name="placeholder_turn_on_internet">Turn on the internet</string>
 
     <string name="sunday">For crying out loud, it\'s sunday</string>
+
+    <string name="lecturer">Lecturer</string>
 
     <string-array name="week_day_array">
         <item>Monday</item>
@@ -73,13 +76,21 @@
     <string name="search_recent_title">Recent:</string>
     <string name="error_title">Error</string>
 
+    <string name="try_again">Try again later or relogin</string>
+
     <string name="search">Search</string>
     <string name="login">Login</string>
     <string name="about">About</string>
 
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_ok">Ok</string>
+
+    <string name="homework_hint">Your task:</string>
+
     <string name="cancel">Cancel</string>
     <string name="importnant">Mark as important</string>
     <string name="homework">Homework</string>
+    <string name="homework_list_empty">No homework yet</string>
 
     <style name="ExpandedAppBar" parent="@android:style/TextAppearance.Medium">
         <item name="android:textSize">28sp</item>
@@ -99,8 +110,14 @@
         <item name="android:textStyle">bold</item>
     </style>
 
+    <string name="connect_email">Logged in</string>
+    <string name="connect_fail">Could not log in</string>
     <string name="groups">Groups</string>
     <string name="lect">Lecturers</string>
+
+    <string name="btn_login_choose">Open shared (group)</string>
+    <string name="btn_logout">Log out</string>
+    <string name="btn_login_create">Create new</string>
 
     <style name="CollapsedAppBarPlus1" parent="@android:style/TextAppearance.Medium">
         <item name="android:textSize">24.5sp</item>

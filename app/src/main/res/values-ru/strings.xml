@@ -17,6 +17,7 @@
     <string name="header_text">дней до экзамена</string>
 
     <string name="placeholder_downloading">Загрузка..</string>
+    <string name="placeholder_saving">Сохранение..</string>
 
     <string name="placeholder_turn_on_internet">Включите интернет</string>
 
@@ -63,6 +64,8 @@
         <item>Занятия</item>
     </string-array>
 
+    <string name="lecturer">Преподаватель</string>
+
     <string name="group_search_placeholder">Номер группы:</string>
     <string name="lecturer_search_placeholder">Имя преподавателя:</string>
 
@@ -71,16 +74,38 @@
 
     <string name="search">Поиск</string>
     <string name="login">Вход</string>
+    <string name="my_tt">Мое расписание</string>
+    <string name="my_hw">Мои задания</string>
     <string name="about">На главную</string>
+
+    <string name="btn_cancel">Отмена</string>
+    <string name="btn_ok">Ок</string>
+
+    <string name="homework_hint">Ваше задание:</string>
 
     <string name="cancel">Отменить</string>
     <string name="importnant">Пометить как важное</string>
     <string name="homework">Домашняя работа</string>
+    <string name="homework_list_empty">Нет домашней работы</string>
 
     <string name="groups">Группы</string>
     <string name="lect">Преподаватели</string>
 
+    <string name="connect_email">Вход выполнен</string>
+    <string name="connect_fail">Вход не выполнен</string>
+    <string name="internet_dialog">Нет интернета</string>
+    <string name="internet_dialog_text">Пожалуйста, включите интернет</string>
+
+    <string name="error">Ошибка</string>
+    <string name="relogin">Пожалуйста, войдите заново</string>
+    <string name="not_loaded">Данные еще не загружены, пожалуйста подождите</string>
+    <string name="try_again">Попробуйте позже</string>
+
     <string name="empty_class">Занятий нет</string>
+
+    <string name="btn_login_choose">Открыть расписание (группы)</string>
+    <string name="btn_logout">Выйти</string>
+    <string name="btn_login_create">Создать новое расписание</string>
 
     <style name="ExpandedAppBar" parent="@android:style/TextAppearance.Medium">
         <item name="android:textSize">28sp</item>

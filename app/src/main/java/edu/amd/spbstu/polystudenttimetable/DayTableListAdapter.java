@@ -1,6 +1,7 @@
 package edu.amd.spbstu.polystudenttimetable;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -89,12 +90,12 @@ public class DayTableListAdapter extends BaseAdapter
         mName.setText(lesson.parent.m_subject);
 
         mCanceled.setVisibility(lesson.m_isCanceled.containsKey(week) ? View.VISIBLE : View.GONE);
-        mHomework.setAlpha(lesson.m_isHomework.containsKey(week) ? 1.0f : 0.15f);
+        mHomework.setAlpha(lesson.m_homework.containsKey(week) ? 1.0f : 0.15f);
         mImportant.setAlpha(lesson.m_isImportant.containsKey(week) ? 1.0f : 0.15f);
 
         mCardView.setOnCreateContextMenuListener(this);
         mHomework.setOnClickListener(mOnHomeworkClickListener);
-        mImportant.setOnClickListener(mOnImportantClickListener);
+//        mImportant.setOnClickListener(mOnImportantClickListener);
         mCardView.setOnClickListener(mOnCardViewClickListener);
 
         return view;
@@ -103,7 +104,14 @@ public class DayTableListAdapter extends BaseAdapter
         @Override
         public void onClick(View v) {
             final int position = listView.getPositionForView((View) v.getParent());
-            Log.d("init", String.valueOf(position));
+            if(!list.get(position).m_homework.containsKey(week))
+                return;
+            new AlertDialog.Builder(act)
+                    .setTitle(act.getResources().getString(R.string.homework))
+                    .setMessage(list.get(position).m_homework.get(week).m_task)
+                    .setPositiveButton(android.R.string.ok, null) // dismisses by default
+                    .create()
+                    .show();
         }
     };
 

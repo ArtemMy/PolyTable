@@ -1,40 +1,42 @@
 package edu.amd.spbstu.polystudenttimetable;
 
+import android.app.AlertDialog;
+import android.app.Fragment;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.Fragment;
-import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.TextUtils;
+import android.text.style.BulletSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.FrameLayout;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-
 import android.widget.TextView;
-import android.widget.Toast;
-import android.widget.TwoLineListItem;
 
 import java.util.ArrayList;
-import java.util.List;
 
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link DetailedClassFragment.OnFragmentInteractionListener} interface
+ * {@link MyDetailedClassFragment.OnFragmentInteractionListener} interface
  * to handle interaction events.
- * Use the {@link DetailedClassFragment#newInstance} factory method to
+ * Use the {@link MyDetailedClassFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class DetailedClassFragment extends Fragment {
+public class MyDetailedClassFragment extends Fragment {
     private static final String ARG_PARAM = "param1";
 
     // TODO: Rename and change types of parameters
@@ -42,7 +44,7 @@ public class DetailedClassFragment extends Fragment {
     private ListView classesList = null;
     private ArrayAdapter<String> cAdapter = null;
     private ArrayList<String> classes = null;
-
+    boolean isEditMode = false;
     private ListView mGroupList;
     private ArrayAdapter mGroupListAdapter;
     private OnFragmentInteractionListener mListener;
@@ -52,15 +54,15 @@ public class DetailedClassFragment extends Fragment {
      * @return A new instance of fragment DetailedClassFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static DetailedClassFragment newInstance(Lesson param) {
-        DetailedClassFragment fragment = new DetailedClassFragment();
+    public static MyDetailedClassFragment newInstance(Lesson param) {
+        MyDetailedClassFragment fragment = new MyDetailedClassFragment();
         Bundle args = new Bundle();
         args.putSerializable("parsedLesson", param);
         fragment.setArguments(args);
         return fragment;
     }
 
-    public DetailedClassFragment() {
+    public MyDetailedClassFragment() {
         // Required empty public constructor
     }
 
@@ -95,7 +97,13 @@ public class DetailedClassFragment extends Fragment {
                 case 0:
                 default:
                     item = inflater.inflate(R.layout.detailed_item, container, false);
-                    ((TextView) item.findViewById(R.id.detailed_item_title)).setText(titles[i]);
+                    TextView mVal = ((TextView) item.findViewById(R.id.detailed_item_value));
+                    mVal.setText(mLesson.m_teacher.m_fio);
+                    mVal.setOnClickListener(mLectClickListener);
+
+                    TextView mTitle = ((TextView) item.findViewById(R.id.detailed_item_title));
+                    mTitle.setText(titles[i]);
+
                     ((TextView) item.findViewById(R.id.detailed_item_value)).setText(mLesson.m_teacher.m_fio);
                     ((TextView) item.findViewById(R.id.detailed_item_value)).setOnClickListener(mLectClickListener);
                     break;
@@ -199,7 +207,19 @@ public class DetailedClassFragment extends Fragment {
             }
             detailed_class_list.addView(item);
         }
-        getActivity().setTitle("");
+        FloatingActionButton myFab = (FloatingActionButton) view.findViewById(R.id.edit_fab);
+        myFab.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if(isEditMode) {
+                    
+                    ((FloatingActionButton) v).setBackgroundDrawable(ContextCompat.getDrawable(getActivity(), android.R.drawable.ic_menu_edit));
+                }
+                else {
+                    ((FloatingActionButton) v).setBackgroundDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.tick));
+                }
+            }
+        });
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle("");
         return view;
     }
     private AdapterView.OnItemClickListener mGroupClickListener = new AdapterView.OnItemClickListener() {
@@ -218,8 +238,7 @@ public class DetailedClassFragment extends Fragment {
 
         @Override
         public void onClick(View view) {
-            if(mLesson.m_teacher.m_fio != "")
-                new ServerGetTable(mLesson.m_teacher, getActivity()).execute();
+            new ServerGetTable(mLesson.m_teacher, getActivity()).execute();
         }
 
     };

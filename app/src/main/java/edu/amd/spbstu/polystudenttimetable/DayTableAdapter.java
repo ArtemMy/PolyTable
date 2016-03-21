@@ -99,7 +99,7 @@ public class DayTableAdapter extends RecyclerView.Adapter<DayTableAdapter.MyView
         vh.mName.setText(lesson.parent.m_subject);
 
         vh.mCanceled.setVisibility(lesson.m_isCanceled.containsKey(week) ? View.VISIBLE : View.GONE);
-        vh.mHomework.setAlpha(lesson.m_isHomework.containsKey(week) ? 1.0f : 0.15f);
+        vh.mHomework.setAlpha(lesson.m_homework.containsKey(week) ? 1.0f : 0.15f);
         vh.mImportant.setAlpha(lesson.m_isImportant.containsKey(week) ? 1.0f : 0.15f);
     }
 

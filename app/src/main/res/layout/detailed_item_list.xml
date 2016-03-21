@@ -29,9 +29,17 @@
         android:background="#448AFF"/>
     <ListView
         android:id="@+id/detailed_item_list_list"
-        android:layout_height="fill_parent"
+        android:layout_height="wrap_content"
         android:divider="#323232"
         android:dividerHeight="1px"
         android:layout_width="match_parent">
     </ListView>
+    <ImageView android:id="@+id/detailed_item_add"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:scaleType="fitXY"
+        android:layout_gravity="center_horizontal"
+        android:background="?android:attr/selectableItemBackground"
+        android:visibility="gone"
+        android:src="@android:drawable/ic_input_add" />
 </LinearLayout>

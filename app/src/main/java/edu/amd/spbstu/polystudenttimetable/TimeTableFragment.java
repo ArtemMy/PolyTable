@@ -44,7 +44,6 @@ public class TimeTableFragment extends Fragment
     View mRootView = null;
     List<RegLessonInstance> mAllClasses;
     LocalDate mDay;
-    RegLessonInstance currentLesson;
 
     private ArrayList<Lesson> mLessonList;
     private String mTitle;
@@ -60,7 +59,7 @@ public class TimeTableFragment extends Fragment
         TimeTableFragment fragment = new TimeTableFragment();
         Bundle args = new Bundle();
         args.putSerializable(ARG_LESSONS, lect.m_listLessons);
-        args.putSerializable(ARG_TITLE, lect.m_fio);
+        args.putSerializable(ARG_TITLE, lect.m_info.m_fio);
         fragment.setArguments(args);
         return fragment;
     }
@@ -69,7 +68,7 @@ public class TimeTableFragment extends Fragment
         TimeTableFragment fragment = new TimeTableFragment();
         Bundle args = new Bundle();
         args.putSerializable(ARG_LESSONS, group.m_listLessons);
-        args.putSerializable(ARG_TITLE, group.m_name);
+        args.putSerializable(ARG_TITLE, group.m_info.m_name);
         fragment.setArguments(args);
         return fragment;
     }
@@ -139,59 +138,7 @@ public class TimeTableFragment extends Fragment
 
         DayTableListAdapter adapter = new DayTableListAdapter(getActivity(), mAllClasses, mDay, daytableView);
         daytableView.setAdapter(adapter);
-        registerForContextMenu(daytableView);
         daytableView.setEmptyView(mRootView.findViewById(R.id.empty_class_view));
-    }
-
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        MenuInflater inflater = getActivity().getMenuInflater();
-        inflater.inflate(R.menu.class_menu, menu);
-        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-    }
-
-    @Override
-        public boolean onContextItemSelected(MenuItem item) {
-        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-
-        currentLesson = mAllClasses.get(info.position);
-        switch (item.getItemId()) {
-            case R.id.menu_class_cancel:
-                Log.d("init", "Cancel class");
-                if(currentLesson.m_isCanceled.containsKey(mDay)) {
-                    currentLesson.m_isCanceled.remove(mDay);
-                    initTable();
-                }
-                else {
-                    currentLesson.m_isCanceled.put(mDay, true);
-                    initTable();
-                }
-                return true;
-            case R.id.menu_class_important:
-                Log.d("init", "mImportant");
-                if(currentLesson.m_isImportant.containsKey(mDay)) {
-                    currentLesson.m_isImportant.remove(mDay);
-                    initTable();
-                }
-                else {
-                    currentLesson.m_isImportant.put(mDay, true);
-                    initTable();
-                }
-                return true;
-            case R.id.menu_class_homework:
-                Log.d("init", "mHomework");
-                if(currentLesson.m_isHomework.containsKey(mDay)) {
-                    currentLesson.m_isHomework.remove(mDay);
-                    initTable();
-                }
-                else {
-                    currentLesson.m_isHomework.put(mDay, "");
-                    initTable();
-                }
-                return true;
-            default:
-                return super.onContextItemSelected(item);
-        }
     }
 
     @Override

@@ -2,59 +2,48 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent"
     android:id="@+id/login_layout"
+    android:gravity="center"
     android:layout_marginBottom="20dp"
     android:layout_marginLeft="10dp"
     android:layout_marginRight="10dp"
     android:layout_marginTop="20dp"
     android:orientation="vertical">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:layout_margin="20dp"
-        android:id="@+id/login_text"
-        android:layout_gravity="center_horizontal" />
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Log in"
+        android:textAppearance="?android:attr/textAppearanceButton"
+        android:text="@string/btn_login_create"
+        android:layout_marginBottom="20dp"
+        android:layout_marginTop="20dp"
         android:layout_margin="10dp"
-        android:id="@+id/login_button"
+        android:background="#8bc34a"
+        android:id="@+id/login_create_button"
         android:layout_gravity="center_horizontal" />
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Log out"
+        android:layout_marginBottom="20dp"
+        android:layout_marginTop="20dp"
+        android:background="#8bc34a"
+        android:textAppearance="?android:attr/textAppearanceButton"
+        android:text="@string/btn_login_choose"
+        android:layout_margin="10dp"
+        android:id="@+id/login_choose_button"
+        android:layout_gravity="center_horizontal" />
+    <Button
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
+        android:background="#ff5722"
+        android:textAppearance="?android:attr/textAppearanceButton"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:text="@string/btn_logout"
         android:layout_margin="10dp"
         android:id="@+id/logout_button"
         android:layout_gravity="center_horizontal" />
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Photo"
-        android:layout_margin="10dp"
-        android:id="@+id/photo_button"
-        android:layout_gravity="center_horizontal" />
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Select"
-        android:layout_margin="10dp"
-        android:id="@+id/file_button"
-        android:layout_gravity="center_horizontal" />
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Create"
-        android:layout_margin="10dp"
-        android:id="@+id/create_button"
-        android:layout_gravity="center_horizontal" />
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Delete"
-        android:layout_margin="10dp"
-        android:id="@+id/delete_button"
-        android:layout_gravity="center_horizontal" />
+
 </LinearLayout>

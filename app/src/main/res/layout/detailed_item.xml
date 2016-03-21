@@ -20,8 +20,8 @@
         android:elegantTextHeight="true"
         android:gravity="center_vertical"
         android:textSize="18sp"
-        android:textColor="#448AFF" >
-    </TextView>
+        android:textColor="#448AFF"
+        />
     <View
         android:layout_width="match_parent"
         android:layout_height="1px"
@@ -35,7 +35,7 @@
         android:elegantTextHeight="true"
         android:textSize="18sp"
         android:gravity="end"
-        android:textColor="#FF000000" >
+        android:textColor="#FF000000">
         <requestFocus />
     </TextView>
 

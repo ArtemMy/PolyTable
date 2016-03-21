@@ -3,6 +3,8 @@ package edu.amd.spbstu.polystudenttimetable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.android.gms.drive.Drive;
+import com.google.android.gms.drive.DriveId;
 import com.wefika.calendar.manager.Week;
 
 import java.io.Serializable;
@@ -17,16 +19,18 @@ public class Lesson implements Serializable
 {
     public Map<Integer, List<RegLessonInstance> > m_reg;
 
-    public List<Group> m_list_groups;
-    public String      m_subject;
-    public Lecturer    m_teacher;
+    public List<GroupInfo>  m_list_groups;
+    public String       m_subject;
+    public LecturerInfo m_teacher;
+    public String       driveFileId;
 
     public Lesson()
     {
         m_subject       = "";
-        m_teacher    = new Lecturer();
+        m_teacher    = new LecturerInfo();
         m_reg = new HashMap<Integer, List<RegLessonInstance> >();
-        m_list_groups = new ArrayList<Group>();
+        m_list_groups = new ArrayList<GroupInfo>();
+        driveFileId = null;
     }
 
     @Override

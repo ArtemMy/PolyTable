@@ -1,7 +1,10 @@
 package edu.amd.spbstu.polystudenttimetable;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -10,6 +13,7 @@ import android.os.Bundle;
 import android.app.Fragment;
 import android.os.Handler;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.NavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -21,10 +25,14 @@ import android.view.animation.Animation;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.Filter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.support.v7.widget.Toolbar;
+
+import java.sql.Array;
+import java.util.ArrayList;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -56,8 +64,8 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
 
     private OnFragmentInteractionListener mListener;
 
-    private boolean m_activeApp = true;
-    private boolean m_download_finished = true;
+    private boolean m_activeApp = false;
+    private boolean m_download_finished = false;
 
 
     private AutoCompleteTextView textView;
@@ -75,10 +83,12 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
         args.putString(ARG_PARAM, param1);
         args.putInt(ARG_TYPE, param2);
         fragment.setArguments(args);
+        Log.d("init", "search fragment onCreate");
         return fragment;
     }
 
     public SearchFragment() {
+        Log.d("init", "search fragment onCreate");
         // Required empty public constructor
     }
 
@@ -104,6 +114,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
             textView = (AutoCompleteTextView)
                     view.findViewById(R.id.autocomplete_search);
             textView.setThreshold(1);
+
             if(mType == t_type.GROUP) {
                 textView.setOnClickListener(this);
                 textView.setOnItemClickListener(this);
@@ -115,7 +126,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
                 adapter.setNotifyOnChange(true);
 
                 ListView list = (ListView) view.findViewById(R.id.recentList);
-                ArrayAdapter recent_adapter = new ArrayAdapter(inflater.getContext(), R.layout.detailed_item_list_item, StaticStorage.m_recentGroups){
+                final ArrayAdapter recent_adapter = new ArrayAdapter(inflater.getContext(), R.layout.detailed_item_list_item, new ArrayList(StaticStorage.m_recentGroups.values())){
                     @Override
                     public View getView(int position, View convertView, ViewGroup parent){
                         View holder;
@@ -128,11 +139,11 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
                         }
 
                         TextView v = (TextView) holder.findViewById(R.id.detailed_item_list_item_text1);
-                        v.setText(group.m_name);
+                        v.setText(group.m_info.m_name);
                         v = (TextView) holder.findViewById(R.id.detailed_item_list_item_text2);
-                        v.setText(group.m_faculty.m_abbr);
+                        v.setText(group.m_info.m_faculty.m_abbr);
                         v = (TextView) holder.findViewById(R.id.detailed_item_list_item_text3);
-                        v.setText(group.m_spec);
+                        v.setText(group.m_info.m_spec);
                         return holder;
                     }
                 };
@@ -143,27 +154,128 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view,
                                             int position, long id) {
-                        Group tmpGroup = (Group)StaticStorage.m_recentGroups.get(position);
+                        Group group = (Group) recent_adapter.getItem(position);
 
-                        Log.d("init", tmpGroup.toString());
-                        new ServerGetTable(tmpGroup, getFragmentManager(), getActivity()).execute();
+                        Log.d("init", group.toString());
+                        if (((NavigationView) getActivity().findViewById(R.id.nav_view)).getMenu().getItem(0).isChecked()) {
+                            new CreateFiles(getActivity(), group).execute();
+                        } else {
+                            ((MainNavigationDrawer) getActivity()).switchContent(TimeTableFragment.newInstance(group));
+                            StaticStorage.m_recentGroups.put(group.m_info.m_id, group);
+                        }
                     }
-
                 });
 
+                Button btn = (Button) view.findViewById(R.id.primat_list);
+                btn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (!((MainNavigationDrawer)getActivity()).isOnline()) {
+                            ((MainNavigationDrawer)getActivity()).askForInternet();
+                            return;
+                        }
 
-                if (StaticStorage.m_listGroupsName.isEmpty()) {
-                    textView.setCompletionHint(getActivity().getString(R.string.placeholder_downloading));
-                    startDownloadListFaculties((ArrayAdapter<String>) textView.getAdapter());
-                }
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                        builder.setTitle(getResources().getString(R.string.str_depth));
+                        builder.setIcon(R.drawable.logo_amd_mod);
+//                        ListView modeList = new ListView(getActivity());
+                        final ArrayAdapter<String> modeAdapter = new ArrayAdapter<String>(getActivity(),
+                                android.R.layout.simple_list_item_1, android.R.id.text1,
+                                StaticStorage.m_primatGroupsName);
+                        builder.setAdapter(modeAdapter,
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        GroupInfo tmpGroup = StaticStorage.m_primatGroups.get(which);
+                                        new ServerGetTable(tmpGroup, getActivity()).execute();
+                                    }
+                                });
+                        final Dialog dialog = builder.create();
+                        dialog.show();
+                    }
+                });
+
+                if (!((MainNavigationDrawer)getActivity()).isOnline()) ((MainNavigationDrawer)getActivity()).askForInternet();
+                else startDownloadListFaculties((ArrayAdapter<String>) textView.getAdapter());
             }
             else {
+                if (!((MainNavigationDrawer)getActivity()).isOnline()) ((MainNavigationDrawer)getActivity()).askForInternet();
                 textView.setOnItemClickListener(this);
                 textView.setHint(R.string.lecturer_search_placeholder);
                 adapter = new ArrayAdapter<String>(getActivity(), R.layout.text_layout, StaticStorage.m_listLecturerName);
                 adapter.setNotifyOnChange(true);
                 textView.setAdapter(adapter);
                 textView.addTextChangedListener(this);
+
+                ListView list = (ListView) view.findViewById(R.id.recentList);
+                final ArrayAdapter recent_adapter = new ArrayAdapter(inflater.getContext(), R.layout.detailed_item_list_item, new ArrayList(StaticStorage.m_recentLecturers.values())){
+                    @Override
+                    public View getView(int position, View convertView, ViewGroup parent){
+                        View holder;
+                        Lecturer group = (Lecturer)getItem(position);
+                        if(convertView == null){
+                            // You should fetch the LayoutInflater once in your constructor
+                            holder = LayoutInflater.from(parent.getContext()).inflate(R.layout.detailed_item_list_item, parent, false);
+                        }else{
+                            holder = convertView;
+                        }
+
+                        TextView v = (TextView) holder.findViewById(R.id.detailed_item_list_item_text1);
+                        v.setText(group.m_info.m_fio);
+                        v = (TextView) holder.findViewById(R.id.detailed_item_list_item_text2);
+                        v.setText("");
+                        v = (TextView) holder.findViewById(R.id.detailed_item_list_item_text3);
+                        v.setText(group.m_info.m_chair);
+                        return holder;
+                    }
+                };
+                list.setAdapter(recent_adapter);
+                // ListView Item Click Listener
+                list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view,
+                                            int position, long id) {
+                        Lecturer lect = (Lecturer) recent_adapter.getItem(position);
+
+                        Log.d("init", lect.toString());
+                        if (((NavigationView) getActivity().findViewById(R.id.nav_view)).getMenu().getItem(0).isChecked()) {
+                            new CreateFiles(getActivity(), lect).execute();
+                        } else {
+                            ((MainNavigationDrawer) getActivity()).switchContent(TimeTableFragment.newInstance(lect));
+                            StaticStorage.m_recentLecturers.put(lect.m_info.m_id, lect);
+                        }
+                    }
+                });
+/*                Button btn = (Button) view.findViewById(R.id.primat_list);
+                btn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                        builder.setTitle(getResources().getString(R.string.str_depth));
+
+                        ListView modeList = new ListView(getActivity());
+                        ArrayAdapter<String> modeAdapter = new ArrayAdapter<String>(getActivity(),
+                                android.R.layout.simple_list_item_1, android.R.id.text1,
+                                StaticStorage.m_primatLecturerName);
+                        modeList.setAdapter(modeAdapter);
+
+                        builder.setView(modeList);
+                        final Dialog dialog = builder.create();
+
+                        dialog.show();
+                    }
+                });
+                */
+                Button btn = (Button) view.findViewById(R.id.primat_list);
+                btn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (!((MainNavigationDrawer)getActivity()).isOnline()) ((MainNavigationDrawer)getActivity()).askForInternet();
+                        else new ServerGetPrimatLecturers(getActivity()).execute();
+                    }
+                });
+
             }
         }
 
@@ -212,15 +324,13 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
 
         if(mType == t_type.GROUP) {
             int ind = StaticStorage.m_listGroupsName.indexOf(selected);
-            Group tmpGroup = StaticStorage.m_listGroups.get(ind);
+            GroupInfo tmpGroup = StaticStorage.m_listGroups.get(ind);
 
-            Log.d("init", String.valueOf(StaticStorage.m_listGroups.get(pos).m_listLessons.size()));
-            new ServerGetTable(tmpGroup, getFragmentManager(), getActivity()).execute();
+            new ServerGetTable(tmpGroup, getActivity()).execute();
         } else {
 //            int ind = StaticStorage.m_listLecturerName.indexOf(selected);
-            Lecturer tmpLecturer = StaticStorage.m_listLecturers.get(pos);
-            Log.d("init", String.valueOf(StaticStorage.m_listLecturers.get(pos).m_listLessons.size()));
-            new ServerGetTable(tmpLecturer, getFragmentManager(), getActivity()).execute();
+            LecturerInfo tmpLecturer = StaticStorage.m_listLecturers.get(pos);
+            new ServerGetTable(tmpLecturer, getActivity()).execute();
         }
     }
 
@@ -249,53 +359,36 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
     @Override
     public void onClick (View v) {
         textView.showDropDown();
+        if (!((MainNavigationDrawer)getActivity()).isOnline()) ((MainNavigationDrawer)getActivity()).askForInternet();
+        else startDownloadListFaculties((ArrayAdapter<String>) textView.getAdapter());
     }
 
-    public void startDownloadListFaculties(ArrayAdapter<String> arrayAdapter)
-    {
-        StaticStorage.m_listFaculties.clear();
-        Thread thread;
-        m_activeApp = true;
-        m_download_finished = false;
-        thread = new Thread() {
-            public void run()
-            {
-                try
-                {
-                    while (!m_download_finished)
-                    {
-                        Thread.sleep(200);
-                        if(m_activeApp) {
-                            if (isOnline()) {
-                                textView.setCompletionHint(getActivity().getString(R.string.placeholder_downloading));
-                                ServerGetFaculties serverGetFaclts = new ServerGetFaculties((ArrayAdapter<String>) textView.getAdapter());
-                                serverGetFaclts.execute();
-                                m_activeApp = false;
-                            }
-                            else
-                                textView.setCompletionHint(getActivity().getString(R.string.placeholder_turn_on_internet));
-                        }
-                        else
-                            if(!textView.getAdapter().isEmpty()) {
+    public void startDownloadListFaculties(ArrayAdapter<String> arrayAdapter) {
+        if (!m_activeApp) {
+            StaticStorage.m_listFaculties.clear();
+            Thread thread;
+            m_activeApp = true;
+            m_download_finished = false;
+            textView.setCompletionHint(getActivity().getString(R.string.placeholder_downloading));
+            ServerGetFaculties serverGetFaclts = new ServerGetFaculties((ArrayAdapter<String>) textView.getAdapter());
+            serverGetFaclts.execute();
+            m_activeApp = true;
+            thread = new Thread() {
+                public void run() {
+                    try {
+                        while (!m_download_finished) {
+                            Thread.sleep(200);
+                            if (!textView.getAdapter().isEmpty()) {
                                 textView.setCompletionHint("");
                                 m_download_finished = true;
                             }
-                    }       // while
+                        }       // while
+                    } catch (Exception ex) {
+                    }
                 }
-                catch (Exception ex) { }
-            }
 
-        };
-        thread.start();
+            };
+            thread.start();
+        }
     }
-
-    public boolean isOnline()
-    {
-        ConnectivityManager cm = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        if ((netInfo != null) && netInfo.isConnectedOrConnecting())
-            return true;
-        return false;
-    }
-
 }

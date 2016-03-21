@@ -5,16 +5,13 @@ import java.util.ArrayList;
 
 public class Lecturer implements Serializable
 {
-    public String   m_chair;
-    public String   m_fio;
-    public int      m_id;
-    public ArrayList<Lesson> m_listLessons = new ArrayList<Lesson>();
+    public LecturerInfo m_info;
+    public ArrayList<Lesson> m_listLessons;
 
     public Lecturer()
     {
-        m_chair     = "";
-        m_id        = -1;
-        m_fio       = "";
+        m_info = new LecturerInfo();
+        m_listLessons = new ArrayList<Lesson>();
         m_listLessons.clear();
     }
 }
