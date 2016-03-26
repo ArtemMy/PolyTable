@@ -30,12 +30,14 @@ public class DayTableAdapter extends RecyclerView.Adapter<DayTableAdapter.MyView
     LocalDate week;
     int position;
     RegLessonInstance currentLesson;
+    private boolean isMy;
 
-    public DayTableAdapter(List<RegLessonInstance> list, LocalDate week, RegLessonInstance currentLesson){
+    public DayTableAdapter(List<RegLessonInstance> list, LocalDate week, RegLessonInstance currentLesson, boolean isMy){
         this.list = list;
         this.week = week;
         this.position = 0;
         this.currentLesson = currentLesson;
+        this.isMy = isMy;
     }
 
     public MyViewHolder getCustomHolder(View v) {
@@ -52,10 +54,20 @@ public class DayTableAdapter extends RecyclerView.Adapter<DayTableAdapter.MyView
                         Log.d("init", "mImportant");
                         break;
                     case R.id.card_view:
-                        DetailedClassFragment mFragment = DetailedClassFragment.newInstance(lesson.parent);
-                        MainNavigationDrawer mainActivity = (MainNavigationDrawer)v.getContext();
-                        Log.d("init", v.getContext().toString());
-                        mainActivity.switchContent(mFragment);
+                        if(isMy) {
+                            DetailedClassFragment mFragment = DetailedClassFragment.newInstance(lesson.parent);
+                            MainNavigationDrawer mainActivity = (MainNavigationDrawer) v.getContext();
+                            Log.d("init", v.getContext().toString());
+                            mainActivity.switchContent(mFragment);
+                        }
+                        else {
+                            MyDetailedClassFragment mFragment = MyDetailedClassFragment.newInstance(lesson.parent);
+                            MainNavigationDrawer mainActivity = (MainNavigationDrawer)v.getContext();
+                            Log.d("init", v.getContext().toString());
+                            mainActivity.switchContent(mFragment);
+                            break;
+                        }
+
                         break;
                 }
             }

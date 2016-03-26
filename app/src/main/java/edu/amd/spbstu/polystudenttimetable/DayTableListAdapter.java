@@ -5,6 +5,14 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.SpannedString;
+import android.text.TextUtils;
+import android.text.style.BulletSpan;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -32,13 +40,14 @@ public class DayTableListAdapter extends BaseAdapter
     Activity act;
     LayoutInflater lInflater;
     ListView listView;
-
-    DayTableListAdapter(Activity activity, List<RegLessonInstance> list, LocalDate day, ListView listView) {
+    boolean isMy;
+    DayTableListAdapter(Activity activity, List<RegLessonInstance> list, LocalDate day, ListView listView, boolean isMy) {
         this.act = activity;
         this.list = list;
         this.week = day;
         this.lInflater = (LayoutInflater) act.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         this.listView = listView;
+        this.isMy = isMy;
     }
     @Override
     public int getCount() {
@@ -71,7 +80,11 @@ public class DayTableListAdapter extends BaseAdapter
         mName = (TextView) view.findViewById(R.id.class_name);
 
         mHomework = (ImageView) view.findViewById(R.id.homework);
+        if(!isMy)
+            mHomework.setVisibility(View.GONE);
         mImportant = (ImageView) view.findViewById(R.id.important);
+        if(!isMy)
+            mImportant.setVisibility(View.GONE);
         mCanceled = (ImageView) view.findViewById(R.id.canceled);
 
         mCardView = (CardView) view.findViewById(R.id.card_view);
@@ -106,9 +119,29 @@ public class DayTableListAdapter extends BaseAdapter
             final int position = listView.getPositionForView((View) v.getParent());
             if(!list.get(position).m_homework.containsKey(week))
                 return;
+
+            Spannable formatedText = new SpannableString(list.get(position).m_homework.get(week).m_task);
+            String[] lines = TextUtils.split(list.get(position).m_homework.get(week).m_task, "\n");
+            SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
+            String line = null;
+            for (int index = 0; index < lines.length; ++index) {
+                line = lines[index];
+                int length = spannableStringBuilder.length();
+                spannableStringBuilder.append(line);
+                if (index != lines.length - 1) {
+                    spannableStringBuilder.append("\n");
+                }
+                if (TextUtils.isEmpty(line)) {
+//                                spannableStringBuilder.append("\n");
+                }
+                else {
+                    formatedText.setSpan(new BulletSpan(30), length, length + 1,
+                            Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+                }
+            }
             new AlertDialog.Builder(act)
                     .setTitle(act.getResources().getString(R.string.homework))
-                    .setMessage(list.get(position).m_homework.get(week).m_task)
+                    .setMessage(formatedText)
                     .setPositiveButton(android.R.string.ok, null) // dismisses by default
                     .create()
                     .show();
@@ -126,10 +159,15 @@ public class DayTableListAdapter extends BaseAdapter
         @Override
         public void onClick(View v) {
             final int position = listView.getPositionForView((View) v.getParent());
-            DetailedClassFragment mFragment = DetailedClassFragment.newInstance(list.get(position).parent);
-            MainNavigationDrawer mainActivity = (MainNavigationDrawer)v.getContext();
-            mainActivity.switchContent(mFragment);
-
+            if(isMy) {
+                MyDetailedClassFragment mFragment = MyDetailedClassFragment.newInstance(list.get(position).parent);
+                MainNavigationDrawer mainActivity = (MainNavigationDrawer) v.getContext();
+                mainActivity.switchContent(mFragment);
+            } else {
+                DetailedClassFragment mFragment = DetailedClassFragment.newInstance(list.get(position).parent);
+                MainNavigationDrawer mainActivity = (MainNavigationDrawer) v.getContext();
+                mainActivity.switchContent(mFragment);
+            }
             Log.d("init", String.valueOf(position));
         }
     };

@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.text.Editable;
+import android.text.Html;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -119,7 +120,7 @@ public class MyTimeTableFragment extends Fragment
 //        daytableView.setItemAnimator(new DefaultItemAnimator());
 //        daytableView.setHasFixedSize(true);
 
-        DayTableListAdapter adapter = new DayTableListAdapter(getActivity(), mAllClasses, mDay, daytableView);
+        DayTableListAdapter adapter = new DayTableListAdapter(getActivity(), mAllClasses, mDay, daytableView, true);
         daytableView.setAdapter(adapter);
         registerForContextMenu(daytableView);
         daytableView.setEmptyView(mRootView.findViewById(R.id.empty_class_view));
@@ -245,11 +246,12 @@ public class MyTimeTableFragment extends Fragment
                             mAllClasses.get(position).m_homework.put(mDay, hw);
                         }
                         */
+
                         if(mAllClasses.get(position).m_homework.containsKey(mDay))
-                            mAllClasses.get(position).m_homework.get(mDay).m_task = edittext.getText();
+                            mAllClasses.get(position).m_homework.get(mDay).m_task = edittext.getText().toString();
                         else {
                             RegLessonInstance.Homework hw = mAllClasses.get(position).newHomework();
-                            hw.m_task = edittext.getText();
+                            hw.m_task = edittext.getText().toString();
                             mAllClasses.get(position).m_homework.put(mDay, hw);
                         }
 

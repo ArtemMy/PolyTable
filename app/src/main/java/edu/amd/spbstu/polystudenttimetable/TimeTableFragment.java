@@ -136,7 +136,7 @@ public class TimeTableFragment extends Fragment
 //        daytableView.setItemAnimator(new DefaultItemAnimator());
 //        daytableView.setHasFixedSize(true);
 
-        DayTableListAdapter adapter = new DayTableListAdapter(getActivity(), mAllClasses, mDay, daytableView);
+        DayTableListAdapter adapter = new DayTableListAdapter(getActivity(), mAllClasses, mDay, daytableView, false);
         daytableView.setAdapter(adapter);
         daytableView.setEmptyView(mRootView.findViewById(R.id.empty_class_view));
     }

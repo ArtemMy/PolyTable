@@ -160,6 +160,28 @@ public class MainNavigationDrawer extends AppCompatActivity
         TextView tv = (TextView) nav_header.findViewById(R.id.header_days);
         Log.d("init", tv.toString());
         tv.setText(String.valueOf(daysToExams()));
+
+        TextView subtv = (TextView) nav_header.findViewById(R.id.header_days_sub);
+        Log.d("init", tv.toString());
+        switch(daysToExams()) {
+            case 1:
+                tv.setText(getResources().getString(R.string.header_text1));
+                break;
+            case 2:
+            case 3:
+            case 4:
+                tv.setText(getResources().getString(R.string.header_text234));
+                break;
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 0:
+                tv.setText(getResources().getString(R.string.header_text56789));
+                break;
+        }
+
         navigationView.addHeaderView(nav_header);
 
         navigationView.setNavigationItemSelectedListener(this);
@@ -327,7 +349,6 @@ public class MainNavigationDrawer extends AppCompatActivity
                 } else {
                     NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
                     navigationView.getMenu().getItem(0).setChecked(true);
-                    navigationView.getMenu().getItem(1).setChecked(false);
                     new Handler().postDelayed(new Runnable() {
                         @Override
                         public void run() {

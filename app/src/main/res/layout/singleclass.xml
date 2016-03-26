@@ -35,7 +35,7 @@
                 android:orientation="vertical"
                 android:layout_alignParentLeft="true"
                 android:paddingLeft="5dp"
-                android:paddingRight="5dp">
+                android:paddingRight="10dp">
                 <TextView
                     android:id="@+id/time1"
                     android:layout_width="wrap_content"
@@ -61,7 +61,6 @@
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:layout_toRightOf="@+id/time"
-                android:layout_toLeftOf="@+id/type"
                 android:paddingBottom="5dp"
                 android:layout_marginLeft="10dp"
                 android:layout_marginStart="10dp"
@@ -72,8 +71,9 @@
                 android:id="@+id/type"
                 android:layout_height="wrap_content"
                 android:textStyle="italic"
-                android:layout_width="wrap_content"
+                android:layout_width="fill_parent"
                 android:layout_toLeftOf="@+id/important"
+                android:layout_toRightOf="@+id/where"
                 android:paddingBottom="5dp"
                 android:layout_marginRight="10dp"
                 android:layout_marginEnd="10dp"

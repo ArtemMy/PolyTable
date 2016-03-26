@@ -20,9 +20,9 @@ public class RegLessonInstance implements Serializable{
         LAB
     }
     public enum weekly_t {
-        ODD,
+        ALL,
         EVEN,
-        ALL
+        ODD
     }
 
     Homework newHomework() {
@@ -34,7 +34,7 @@ public class RegLessonInstance implements Serializable{
             m_task = "";
         }
 
-        public CharSequence m_task;
+        public String m_task;
     }
 
     public Lesson parent;
@@ -45,7 +45,7 @@ public class RegLessonInstance implements Serializable{
     public String   m_timeEnd;
     public String   m_roomName;
     public String   m_buildingName;
-    public weekly_t   weekly;
+    public weekly_t m_weekly;
 
     public Map<LocalDate, Boolean> m_isCanceled;
     public Map<LocalDate, Boolean> m_isImportant;
@@ -63,6 +63,6 @@ public class RegLessonInstance implements Serializable{
         m_isCanceled = new HashMap<LocalDate, Boolean>();
         m_isImportant = new HashMap<LocalDate, Boolean>();
         m_homework = new HashMap<LocalDate, Homework>();
-        weekly = weekly_t.ALL;
+        m_weekly = weekly_t.ALL;
     }
 }

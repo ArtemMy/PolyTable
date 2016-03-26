@@ -14,12 +14,35 @@
     <string name="navigation_drawer_open">Открыть шторку</string>
     <string name="navigation_drawer_close">Закрыть шторку</string>
 
-    <string name="header_text">дней до экзамена</string>
+    <string name="header_text1">день до конца семестра</string>
+    <string name="header_text234">дня до конца семестра</string>
+    <string name="header_text56789">дней до конца семестра</string>
 
     <string name="placeholder_downloading">Загрузка..</string>
     <string name="placeholder_saving">Сохранение..</string>
 
     <string name="placeholder_turn_on_internet">Включите интернет</string>
+
+    <string name="newn.str">Новое занятие</string>
+    <string name="newn.type.str">Тип занятия</string>
+    <string name="newn.day.str">День недели</string>
+    <string name="newn.odd.str">Четность</string>
+    <string name="newn.start.str">Время начала занятия</string>
+    <string name="newn.end.str">Время конца занятия</string>
+    <string name="newn.room.str">Номер аудитории</string>
+    <string name="newn.build.str">Корпус</string>
+
+    <string-array name="odd_array">
+        <item>Каждую неделю</item>
+        <item>Четные недели</item>
+        <item>Нечетные недели</item>
+    </string-array>
+
+    <string-array name="type_array">
+        <item>Лекция</item>
+        <item>Практика</item>
+        <item>Лабораторные</item>
+    </string-array>
 
     <string-array name="week_day_array">
         <item>Понедельник</item>

@@ -5,6 +5,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -88,7 +90,15 @@ public class DetailedClassFragment extends Fragment {
         collapsingToolbar.setText(mLesson.m_subject);
         LinearLayout detailed_class_list = (LinearLayout)view.findViewById(R.id.detailed_container);
 
+        FloatingActionButton myFab = (FloatingActionButton) view.findViewById(R.id.edit_fab);
+        CoordinatorLayout.LayoutParams p = (CoordinatorLayout.LayoutParams) myFab.getLayoutParams();
+        p.setBehavior(null); //should disable default animations
+        p.setAnchorId(View.NO_ID); //should let you set visibility
+        myFab.setLayoutParams(p);
+        myFab.setVisibility(View.GONE); // View.INVISIBLE might also be worth trying
+
         String[] titles = getResources().getStringArray(R.array.class_details);
+
         for(int i = 0; i < titles.length; ++i) {
             View item;
             switch(i) {
