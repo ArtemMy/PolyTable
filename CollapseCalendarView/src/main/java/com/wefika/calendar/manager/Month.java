@@ -56,7 +56,8 @@ public class Month extends RangeUnit {
         LocalDate minDate = getMinDate();
         if (minDate == null) {
             return true;
-        } else {
+        }
+        else {
 
             LocalDate from = getFrom();
             int year = minDate.getYear();

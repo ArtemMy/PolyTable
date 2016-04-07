@@ -20,8 +20,8 @@
                 android:layout_height="wrap_content"
                 style="?android:borderlessButtonStyle"
                 android:src="@drawable/ic_arrow_left"
-                android:contentDescription="@string/time_prev"
-                android:background="@null"/>
+                android:contentDescription="@string/time_prev">
+            </ImageButton>
 
             <TextView
                 android:id="@+id/title"
@@ -38,8 +38,8 @@
                 android:layout_height="wrap_content"
                 style="?android:borderlessButtonStyle"
                 android:src="@drawable/ic_arrow_right"
-                android:contentDescription="@string/time_next"
-                android:background="@null"/>
+                android:contentDescription="@string/time_next"/>
+
 
         </LinearLayout>
 

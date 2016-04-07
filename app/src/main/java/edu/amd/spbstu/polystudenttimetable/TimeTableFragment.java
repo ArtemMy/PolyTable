@@ -5,7 +5,7 @@ import android.app.FragmentTransaction;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -41,12 +41,14 @@ public class TimeTableFragment extends Fragment
         CardView.OnCreateContextMenuListener {
     private static final String ARG_LESSONS = "lessons";
     private static final String ARG_TITLE = "title";
+    private static final String ARG_ISGR = "isgroup";
     View mRootView = null;
     List<RegLessonInstance> mAllClasses;
     LocalDate mDay;
 
     private ArrayList<Lesson> mLessonList;
     private String mTitle;
+    private boolean mIsGroup;
 
     private static CalendarManager calendarManager;
     private static CollapseCalendarView calendarView;
@@ -60,6 +62,7 @@ public class TimeTableFragment extends Fragment
         Bundle args = new Bundle();
         args.putSerializable(ARG_LESSONS, lect.m_listLessons);
         args.putSerializable(ARG_TITLE, lect.m_info.m_fio);
+        args.putBoolean(ARG_ISGR, false);
         fragment.setArguments(args);
         return fragment;
     }
@@ -69,6 +72,7 @@ public class TimeTableFragment extends Fragment
         Bundle args = new Bundle();
         args.putSerializable(ARG_LESSONS, group.m_listLessons);
         args.putSerializable(ARG_TITLE, group.m_info.m_name);
+        args.putBoolean(ARG_ISGR, true);
         fragment.setArguments(args);
         return fragment;
     }
@@ -85,13 +89,21 @@ public class TimeTableFragment extends Fragment
         if (getArguments() != null) {
             mLessonList = (ArrayList<Lesson>)getArguments().getSerializable(ARG_LESSONS);
             mTitle = (String)getArguments().getSerializable(ARG_TITLE);
+            mIsGroup = getArguments().getBoolean(ARG_ISGR);
         }
         else {
             mLessonList = new ArrayList<Lesson>();
             mTitle = getResources().getString(R.string.error_title);
+            mIsGroup = false;
         }
         /* calendar init */
-        calendarManager = new CalendarManager(LocalDate.now(), CalendarManager.State.MONTH, LocalDate.now(), LocalDate.now().plusYears(1));
+        LocalDate t;
+        if(LocalDate.now().getMonthOfYear() > 8)
+            t = new LocalDate(LocalDate.now().getYear(), 9, 1);
+        else
+            t = new LocalDate(LocalDate.now().getYear(), 2, 1);
+
+        calendarManager = new CalendarManager(LocalDate.now(), CalendarManager.State.MONTH, t, t.plusMonths(4).minusDays(1));
         setHasOptionsMenu(true);
 //        calendarManager.toggleView();
     }
@@ -99,7 +111,7 @@ public class TimeTableFragment extends Fragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+        // Inflate the help for this fragment
         if(mRootView == null)
             mRootView = inflater.inflate(R.layout.fragment_time_table, container, false);
 
@@ -136,7 +148,7 @@ public class TimeTableFragment extends Fragment
 //        daytableView.setItemAnimator(new DefaultItemAnimator());
 //        daytableView.setHasFixedSize(true);
 
-        DayTableListAdapter adapter = new DayTableListAdapter(getActivity(), mAllClasses, mDay, daytableView, false);
+        DayTableListAdapter adapter = new DayTableListAdapter(getActivity(), mAllClasses, mDay, daytableView, false, mIsGroup);
         daytableView.setAdapter(adapter);
         daytableView.setEmptyView(mRootView.findViewById(R.id.empty_class_view));
     }

@@ -25,13 +25,17 @@ public class ServerGetPrimatLecturers extends AsyncTask<String, String, String>
     private Activity mAct;
     ArrayList<String>     listLecturers = new ArrayList<String>();
     private ProgressDialog pb;
-
-    public ServerGetPrimatLecturers(Activity act)
+    private String strInput;
+    private boolean show;
+    public ServerGetPrimatLecturers(Activity act, boolean show)
     {
         mAct = act;
+        this.show = show;
     }
-    protected String doInBackground(String... strUrl)
+    protected String doInBackground(String... input)
     {
+        if(isCancelled())
+            return "";
         try
         {
             URL url = new URL("http://amd.stu.neva.ru/lecturers");
@@ -63,6 +67,13 @@ public class ServerGetPrimatLecturers extends AsyncTask<String, String, String>
         }
 
         parseHtmlLecturers(strResult);
+
+        StaticStorage.m_primatLectName = listLecturers;
+
+        pb.dismiss();
+        showDialog();
+    }
+    private void showDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(mAct);
         builder.setTitle(mAct.getResources().getString(R.string.str_depth));
         builder.setIcon(R.drawable.logo_amd_mod);
@@ -78,12 +89,10 @@ public class ServerGetPrimatLecturers extends AsyncTask<String, String, String>
                         new ServerGetLecturers(mAct).execute(str);
                     }
                 });
-        pb.dismiss();
         final Dialog dialog = builder.create();
-        dialog.show();
-
+        if(show)
+            dialog.show();
     }
-
     private void parseHtmlLecturers(String strHtml)
     {
         Pattern                 pLecturer;
@@ -104,6 +113,12 @@ public class ServerGetPrimatLecturers extends AsyncTask<String, String, String>
     @Override
     protected void onPreExecute()
     {
+        if(!StaticStorage.m_primatLectName.isEmpty()) {
+            listLecturers = StaticStorage.m_primatLectName;
+            showDialog();
+            cancel(true);
+            return;
+        }
         if(!((MainNavigationDrawer)mAct).isOnline()) {
             ((MainNavigationDrawer) mAct).askForInternet();
             cancel(true);

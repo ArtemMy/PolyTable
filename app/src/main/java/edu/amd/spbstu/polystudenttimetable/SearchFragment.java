@@ -10,7 +10,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.os.Handler;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.NavigationView;
@@ -26,10 +26,14 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ExpandableListView;
 import android.widget.Filter;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.support.v7.widget.Toolbar;
+import android.widget.TimePicker;
 
 import java.sql.Array;
 import java.util.ArrayList;
@@ -42,7 +46,7 @@ import java.util.ArrayList;
  * Use the {@link SearchFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class SearchFragment extends Fragment implements View.OnClickListener,
+public class SearchFragment extends android.support.v4.app.Fragment implements View.OnClickListener,
         AdapterView.OnItemClickListener, TextWatcher {
 
     public enum t_type {
@@ -102,15 +106,16 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
         Log.d("init", "search fragment onCreate");
     }
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+        // Inflate the help for this fragment
 //        if(view == null)
         Log.d("init", "search fragment onCreateView");
-        if(view == null)
+        if(true)
             view = inflater.inflate(R.layout.fragment_search, container, false);
-        if(textView == null) {
+        if(true) {
             textView = (AutoCompleteTextView)
                     view.findViewById(R.id.autocomplete_search);
             textView.setThreshold(1);
@@ -158,7 +163,8 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
 
                         Log.d("init", group.toString());
                         if (((NavigationView) getActivity().findViewById(R.id.nav_view)).getMenu().getItem(0).isChecked()) {
-                            new CreateFiles(getActivity(), group).execute();
+                            ((MainNavigationDrawer)getActivity()).createTree(group);
+//                            new CreateFiles(getActivity(), group).execute();
                         } else {
                             ((MainNavigationDrawer) getActivity()).switchContent(TimeTableFragment.newInstance(group));
                             StaticStorage.m_recentGroups.put(group.m_info.m_id, group);
@@ -170,8 +176,17 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
                 btn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (!((MainNavigationDrawer)getActivity()).isOnline()) {
-                            ((MainNavigationDrawer)getActivity()).askForInternet();
+                        if (!((MainNavigationDrawer) getActivity()).isOnline()) {
+                            ((MainNavigationDrawer) getActivity()).askForInternet();
+                            return;
+                        }
+                        if (StaticStorage.m_primatGroupsName.isEmpty()) {
+                            new AlertDialog.Builder(getActivity())
+                                    .setTitle(getResources().getString(R.string.error))
+                                    .setMessage(getResources().getString(R.string.not_loaded))
+                                    .setPositiveButton(android.R.string.ok, null) // dismisses by default
+                                    .create()
+                                    .show();
                             return;
                         }
 
@@ -240,14 +255,16 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
 
                         Log.d("init", lect.toString());
                         if (((NavigationView) getActivity().findViewById(R.id.nav_view)).getMenu().getItem(0).isChecked()) {
-                            new CreateFiles(getActivity(), lect).execute();
+                            ((MainNavigationDrawer)getActivity()).createTree(lect);
+//                            new CreateFiles(getActivity(), lect).execute();
                         } else {
                             ((MainNavigationDrawer) getActivity()).switchContent(TimeTableFragment.newInstance(lect));
                             StaticStorage.m_recentLecturers.put(lect.m_info.m_id, lect);
                         }
                     }
                 });
-/*                Button btn = (Button) view.findViewById(R.id.primat_list);
+/*
+                Button btn = (Button) view.findViewById(R.id.primat_list);
                 btn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -256,7 +273,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
 
                         ListView modeList = new ListView(getActivity());
                         ArrayAdapter<String> modeAdapter = new ArrayAdapter<String>(getActivity(),
-                                android.R.layout.simple_list_item_1, android.R.id.text1,
+                                android.R.help.simple_list_item_1, android.R.id.text1,
                                 StaticStorage.m_primatLecturerName);
                         modeList.setAdapter(modeAdapter);
 
@@ -272,7 +289,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
                     @Override
                     public void onClick(View v) {
                         if (!((MainNavigationDrawer)getActivity()).isOnline()) ((MainNavigationDrawer)getActivity()).askForInternet();
-                        else new ServerGetPrimatLecturers(getActivity()).execute();
+                        else new ServerGetPrimatLecturers(getActivity(), true).execute();
                     }
                 });
 
@@ -281,7 +298,17 @@ public class SearchFragment extends Fragment implements View.OnClickListener,
 
 //        ((CollapsingToolbarLayout)getActivity().findViewById(R.id.collapsing_toolbar_layout)).setTitle(getResources().getString(R.string.search));
 //        ((Toolbar)getActivity().findViewById(R.id.toolbar)).setTitle(getResources().getString(R.string.search));
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(getResources().getString(R.string.search));
+
+        if(((NavigationView) getActivity().findViewById(R.id.nav_view)).getMenu().getItem(0).isChecked()) {
+            if(mType == t_type.GROUP) {
+                ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(getResources().getString(R.string.choose_group));
+            } else {
+                ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(getResources().getString(R.string.choose_lectname));
+            }
+        } else {
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(getResources().getString(R.string.search));
+        }
+
         return view;
     }
 

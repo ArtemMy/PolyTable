@@ -48,6 +48,7 @@ public class WriteFile extends AsyncTask<Void, Void, Boolean> {
         GoogleApiClient.Builder builder = new GoogleApiClient.Builder(context)
                 .addApi(Drive.API)
                 .addScope(Drive.SCOPE_FILE);
+
         mClient = builder.build();
         this.lesson = lesson;
         ctx = context;
@@ -139,7 +140,7 @@ public class WriteFile extends AsyncTask<Void, Void, Boolean> {
     protected void onPreExecute()
     {
         pb = new ProgressDialog(ctx);
-        pb.setMessage(ctx.getResources().getString(R.string.placeholder_downloading));
+        pb.setMessage(ctx.getResources().getString(R.string.placeholder_saving));
         pb.show();
     }
 

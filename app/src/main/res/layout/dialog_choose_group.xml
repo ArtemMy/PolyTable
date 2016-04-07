@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Spinner
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/newn.type.str"
+        android:layout_marginTop="20dp"
+        android:id="@+id/choose_group.fac"
+        android:entries="@array/type_array"
+        android:prompt="@string/choose_group.fac" />
+
+    <Spinner
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/newn.type.str"
+        android:layout_marginTop="20dp"
+        android:id="@+id/choose_group.cou"
+        android:entries="@array/type_array"
+        android:prompt="@string/choose_group.cou" />
+
+    <Spinner
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/newn.type.str"
+        android:layout_marginTop="20dp"
+        android:id="@+id/choose_group.grou"
+        android:entries="@array/type_array"
+        android:prompt="@string/choose_group.grou" />
+</LinearLayout>
+

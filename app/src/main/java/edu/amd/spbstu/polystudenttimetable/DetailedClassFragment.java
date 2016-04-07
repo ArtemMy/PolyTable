@@ -3,7 +3,7 @@ package edu.amd.spbstu.polystudenttimetable;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
@@ -80,7 +80,7 @@ public class DetailedClassFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+        // Inflate the help for this fragment
         Log.d("init", mLesson.m_teacher.m_fio + String.valueOf(mLesson.m_teacher.m_id));
 
         View view = inflater.inflate(R.layout.fragment_detailed, container, false);
@@ -228,8 +228,8 @@ public class DetailedClassFragment extends Fragment {
 
         @Override
         public void onClick(View view) {
-            if(mLesson.m_teacher.m_fio != "")
-                new ServerGetTable(mLesson.m_teacher, getActivity()).execute();
+        if(mLesson.m_teacher.m_fio != getActivity().getResources().getString(R.string.not_set))
+            new ServerGetTable(mLesson.m_teacher, getActivity()).execute();
         }
 
     };

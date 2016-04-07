@@ -7,11 +7,13 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.util.Xml;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveApi;
 import com.google.android.gms.drive.DriveContents;
@@ -49,17 +51,37 @@ public class UpdateFiles extends AsyncTask<Void, Void, Boolean> {
     private static final String TAG = "polytable_log";
     static final String PREF_FILE_ID = "poly_table_file_id";
     private Activity ctx;
+    private String filename;
 
     public UpdateFiles(Activity context, Object obj) {
         GoogleApiClient.Builder builder = new GoogleApiClient.Builder(context)
                 .addApi(Drive.API)
-                .addScope(Drive.SCOPE_FILE);
+                .addScope(Drive.SCOPE_FILE)
+                .addScope(Drive.SCOPE_APPFOLDER);
+
+
         mClient = builder.build();
         this.obj = obj;
         ctx = context;
+        filename = null;
         mPref = ctx.getSharedPreferences(
                 "edu.amd.spbstu.polystudenttimetable", Context.MODE_PRIVATE);
     }
+
+    public UpdateFiles(Activity context, Object obj, String fileCode) {
+        GoogleApiClient.Builder builder = new GoogleApiClient.Builder(context)
+                .addApi(Drive.API)
+                .addScope(Drive.SCOPE_FILE);
+
+        mClient = builder.build();
+        this.obj = obj;
+        ctx = context;
+        filename = null;
+        mPref = ctx.getSharedPreferences(
+                "edu.amd.spbstu.polystudenttimetable", Context.MODE_PRIVATE);
+        this.filename = fileCode;
+    }
+
     @Override
     protected final Boolean doInBackground(Void... v) {
         Log.d("TAG", "in background");
@@ -99,15 +121,50 @@ public class UpdateFiles extends AsyncTask<Void, Void, Boolean> {
     protected Boolean doInBackgroundConnected(Void... v) {
         Log.d(TAG, "aloha");
 
-        String FileId = mPref.getString(PREF_FILE_ID, "");
-
-        if(FileId.equalsIgnoreCase("")) {
-            Log.d(TAG, "FileId == null");
-            return false;
-        }
         try {
+            DriveId driveId;
 //            DriveApi.DriveIdResult resultId = Drive.DriveApi.fetchDriveId(getGoogleApiClient(), FileId).await();
-            DriveId driveId = DriveId.decodeFromString(FileId);
+            if(filename == null) {
+                String FileId = mPref.getString(PREF_FILE_ID, "");
+                if (FileId.equalsIgnoreCase("")) {
+                    Log.d(TAG, "FileId == null");
+                    return false;
+                }
+                driveId = DriveId.decodeFromString(FileId);
+                if(driveId.getResourceId() != null)
+                    driveId = Drive.DriveApi.fetchDriveId(mClient, driveId.getResourceId()).await().getDriveId();
+            } else {
+                /*
+                Log.d(TAG, filename);
+                Query query = new Query.Builder()
+                        .addFilter(Filters.and(
+                                        Filters.eq(SearchableField.TITLE, filename),
+                                        Filters.sharedWithMe())
+                        ).build();
+                Query query = new Query.Builder()
+                        .addFilter(Filters.sharedWithMe()
+                        ).build();
+                DriveApi.MetadataBufferResult result = Drive.DriveApi.query(mClient, query).await();
+                if (!result.getStatus().isSuccess()) {
+                    return false;
+                }
+
+                Log.d(TAG, String.valueOf(result.getMetadataBuffer().getCount()));
+                if (result.getMetadataBuffer().getCount() == 0) {
+                    Snackbar snackbar = Snackbar
+                            .make(ctx.findViewById(R.id.main_coord_layout), ctx.getResources().getString(R.string.wrong_data), Snackbar.LENGTH_LONG);
+                    snackbar.show();
+                    return false;
+                }
+                driveId = result.getMetadataBuffer().get(0).getDriveId();
+                */
+                driveId = Drive.DriveApi.fetchDriveId(mClient, filename).await().getDriveId();
+                SharedPreferences.Editor editor = ctx.getSharedPreferences(
+                        "edu.amd.spbstu.polystudenttimetable", Context.MODE_PRIVATE).edit();
+                editor.putString(PREF_FILE_ID, driveId.encodeToString());
+                editor.apply();
+                Log.d(TAG, "saved");
+            }
             DriveFile genFile = driveId.asDriveFile();
 
             DriveApi.DriveContentsResult genDriveContentsResult = genFile.open(
@@ -116,6 +173,11 @@ public class UpdateFiles extends AsyncTask<Void, Void, Boolean> {
                 Log.d(TAG, "!genDriveContentsResult.getStatus().isSuccess()");
                 return false;
             }
+            if(driveId.getResourceId() != null)
+                Log.d(TAG, "gen resource id" + driveId.getResourceId());
+            else
+                Log.d(TAG, "gen resource id null");
+
             DriveContents genDriveContents = genDriveContentsResult.getDriveContents();
             InputStream genInputStream = genDriveContents.getInputStream();
             //                outputStream.write(writeXML(group).getBytes());
@@ -137,8 +199,11 @@ public class UpdateFiles extends AsyncTask<Void, Void, Boolean> {
             genIs.close();
             genDriveContents.discard(getGoogleApiClient());
 
-            for(String lessonId : _listLessonsId) {
-                DriveId fileId = DriveId.decodeFromString(lessonId);
+            for(int i = 0; i < _listLessonsId.size(); ++i) {
+//            for(String lessonId : _listLessonsId) {
+                DriveId fileId = DriveId.decodeFromString(_listLessonsId.get(i));
+                if(fileId.getResourceId() != null)
+                    fileId = Drive.DriveApi.fetchDriveId(mClient, fileId.getResourceId()).await().getDriveId();
                 DriveFile file = fileId.asDriveFile();
 
                 DriveApi.DriveContentsResult driveContentsResult = file.open(
@@ -152,7 +217,10 @@ public class UpdateFiles extends AsyncTask<Void, Void, Boolean> {
                 //                outputStream.write(writeXML(group).getBytes());
                 ObjectInputStream is = new ObjectInputStream(inputStream);
                 Lesson l = (Lesson) is.readObject();
-                l.driveFileId = lessonId;
+                DriveId did = driveContents.getDriveId();
+                Log.d(TAG, "resource id: " + did.getResourceId());
+                l.driveFileId = driveContents.getDriveId().encodeToString();
+                _listLessonsId.set(i, driveContents.getDriveId().encodeToString());
                 _listLessons.add(l);
                 is.close();
                 driveContents.discard(getGoogleApiClient());
@@ -172,7 +240,7 @@ public class UpdateFiles extends AsyncTask<Void, Void, Boolean> {
     @Override
     protected void onPostExecute(Boolean result) {
         super.onPostExecute(result);
-        if (!result) {
+        if(result == null || !result) {
             Log.d(TAG, "fail");
             new AlertDialog.Builder(ctx)
                     .setTitle(ctx.getResources().getString(R.string.error))
@@ -186,6 +254,9 @@ public class UpdateFiles extends AsyncTask<Void, Void, Boolean> {
             ((MainNavigationDrawer) ctx).the_obj = obj;
             ((MainNavigationDrawer) ctx).setIsLoggedIn(true);
         }
+        Snackbar snackbar = Snackbar
+                .make(ctx.findViewById(R.id.main_coord_layout), ctx.getResources().getString(R.string.load_success), Snackbar.LENGTH_LONG);
+        snackbar.show();
         Log.d(TAG, "updated");
         // The creation succeeded, show a message.
     }

@@ -14,8 +14,6 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
-    <string name="header_text">days till the exams</string>
-
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
     <string name="placeholder_downloading">Downloading..</string>
@@ -23,6 +21,11 @@
     <string name="placeholder_turn_on_internet">Turn on the internet</string>
 
     <string name="sunday">For crying out loud, it\'s sunday</string>
+
+    <string name="btn_login_choose_gr">Load shared group</string>
+    <string name="btn_login_choose_les">Load shared lesson</string>
+    <string name="btn_login_share_gr">Share group</string>
+    <string name="btn_login_share_les">Share lesson</string>
 
     <string-array name="week_day_array">
         <item>Monday</item>

@@ -199,12 +199,14 @@ public class ServerGetTable extends AsyncTask<Void, String, String>
                 Group group = new Group();
                 group.m_info = m_group;
                 group.m_listLessons = listLesson;
-                new CreateFiles(mAct, group).execute();
+                ((MainNavigationDrawer)mAct).createTree(group);
+//                new CreateFiles(mAct, group).execute();
             } else {
                 Lecturer lect = new Lecturer();
                 lect.m_info = m_lect;
                 lect.m_listLessons = listLesson;
-                new CreateFiles(mAct, lect).execute();
+                ((MainNavigationDrawer)mAct).createTree(lect);
+//                new CreateFiles(mAct, lect).execute();
             }
         } else {
             if (isGroup) {

@@ -26,15 +26,17 @@ public class RegLessonInstance implements Serializable{
     }
 
     Homework newHomework() {
-        return new Homework();
+        return new Homework(this);
     }
 
     public class Homework implements Serializable{
-        public Homework() {
+        public Homework(RegLessonInstance lesson) {
             m_task = "";
+            this.m_lesson = lesson;
         }
 
         public String m_task;
+        public RegLessonInstance m_lesson;
     }
 
     public Lesson parent;

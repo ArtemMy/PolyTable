@@ -2,6 +2,7 @@
     <string name="app_name">Студенческое расписание</string>
     <string name="action_settings">Настройки</string>
     <string name="str_depth">Кафедра Прикладной Математики</string>
+    <string name="str_institite">Институт прикладной математики и механики</string>
     <string name="str_university1">Санкт-Петербургский Государственный</string>
     <string name="str_university2">Политехнический Университет</string>
     <string name="str_toweb">На сайт</string>
@@ -14,19 +15,33 @@
     <string name="navigation_drawer_open">Открыть шторку</string>
     <string name="navigation_drawer_close">Закрыть шторку</string>
 
-    <string name="header_text1">день до конца семестра</string>
-    <string name="header_text234">дня до конца семестра</string>
-    <string name="header_text56789">дней до конца семестра</string>
+    <string name="not_set">Не задан</string>
+
+    <string name="header_1text1">день до конца семестра</string>
+    <string name="header_1text234">дня до конца семестра</string>
+    <string name="header_1text56789">дней до конца семестра</string>
+
+    <string name="header_2text1">день до начала сессии</string>
+    <string name="header_2text234">дня до начала сессии</string>
+    <string name="header_2text56789">дней до начала сессии</string>
+
+    <string name="wrong_data">Неправильные данные</string>
+    <string name="load_success">Загрузка данных прошла успешно</string>
+    <string name="share_success">Данные отправлены</string>
 
     <string name="placeholder_downloading">Загрузка..</string>
     <string name="placeholder_saving">Сохранение..</string>
 
     <string name="placeholder_turn_on_internet">Включите интернет</string>
 
+    <string name="choose_group.grou">Выберите группу</string>
+    <string name="choose_group.fac">Выберите факультет</string>
+    <string name="choose_group.cou">Выберите курс</string>
+
     <string name="newn.str">Новое занятие</string>
-    <string name="newn.type.str">Тип занятия</string>
-    <string name="newn.day.str">День недели</string>
-    <string name="newn.odd.str">Четность</string>
+    <string name="newn.type.str">Выбрать тип занятия</string>
+    <string name="newn.day.str">Выбрать день недели</string>
+    <string name="newn.odd.str">Выбрать четность</string>
     <string name="newn.start.str">Время начала занятия</string>
     <string name="newn.end.str">Время конца занятия</string>
     <string name="newn.room.str">Номер аудитории</string>
@@ -95,11 +110,15 @@
     <string name="search_recent_title">Недавние:</string>
     <string name="error_title">Ошибка</string>
 
+    <string name="choose_group">Выберите вашу группу</string>
+    <string name="choose_lectname">Выберите ваше имя</string>
+
     <string name="search">Поиск</string>
-    <string name="login">Вход</string>
+    <string name="login">Совместный доступ</string>
     <string name="my_tt">Мое расписание</string>
     <string name="my_hw">Мои задания</string>
     <string name="about">На главную</string>
+    <string name="help">Помощь</string>
 
     <string name="btn_cancel">Отмена</string>
     <string name="btn_ok">Ок</string>
@@ -111,13 +130,19 @@
     <string name="homework">Домашняя работа</string>
     <string name="homework_list_empty">Нет домашней работы</string>
 
+    <string name="email">Введите адрес почты</string>
+
     <string name="groups">Группы</string>
     <string name="lect">Преподаватели</string>
 
-    <string name="connect_email">Вход выполнен</string>
+    <string name="connect_email">Вход выполнен, как</string>
     <string name="connect_fail">Вход не выполнен</string>
     <string name="internet_dialog">Нет интернета</string>
     <string name="internet_dialog_text">Пожалуйста, включите интернет</string>
+
+    <string name="newn_wrn_bld">Пожалуйста, укажите здание</string>
+    <string name="newn_wrn_room">Пожалуйста, укажите аудиторию</string>
+    <string name="newn_wrn_time">Пожалуйста, введите корректное время занятия</string>
 
     <string name="error">Ошибка</string>
     <string name="relogin">Пожалуйста, войдите заново</string>
@@ -126,9 +151,17 @@
 
     <string name="empty_class">Занятий нет</string>
 
-    <string name="btn_login_choose">Открыть расписание (группы)</string>
-    <string name="btn_logout">Выйти</string>
+    <string name="btn_login_choose_gr">Загрузить расписание группы</string>
+    <string name="btn_login_choose_les">Загрузить расписание предмета</string>
+    <string name="btn_login_share_gr">Поделиться расписанием группы</string>
+    <string name="btn_login_share_les">Поделиться расписанием предмета</string>
+
+    <string name="btn_logout">Удалить расписание</string>
     <string name="btn_login_create">Создать новое расписание</string>
+
+    <string name="upcoming">Ближайшие</string>
+    <string name="today">Сегодня</string>
+    <string name="tommorow">Завтра</string>
 
     <style name="ExpandedAppBar" parent="@android:style/TextAppearance.Medium">
         <item name="android:textSize">28sp</item>
@@ -153,4 +186,23 @@
         <item name="android:textColor">@color/white</item>
         <item name="android:textStyle">normal</item>
     </style>
+
+    <string-array name="help_titles">
+        <item>Редактировать занятие</item>
+        <item>Редактировать предмет</item>
+        <item>Промотреть текущие задания</item>
+        <item>Режим гостя. Поиск расписания.</item>
+        <item>Совместный доступ. Вход в аккаунт</item>
+    </string-array>
+    <string-array name="help_texts">
+        <item>Для того чтобы редактировать, занятие удерживайте зажатым соответствующее занятие, пока не откроется контекстное меню. Там вы сможете редактировать дз, пометить и отменить занятие. Просмотреть домашее задание также можно нажав на соответствующую иконку.</item>
+        <item>Для того чтобы редактировать предмет, нажмите на красную плавающую кнопку. После редактирования, вы можете сохранить изменения, нажав на зеленую галочку на том же месте</item>
+        <item>Для того чтобы просмотреть текущие задания, выберите соответствующий пункт меню. Редактирование осуществляется нажатием на нужное занятие</item>
+        <item>Для того чтобы найти расписание не требуется выполнять вход. Вы можете воспользовататься строкой поиска с автодополнением и списком для кафедры Прикладной Математики. Недавно просмотренные расписания доступны ниже в режиме оффлайн. Аналогичный функционал для преподавателя можно получить произведя свайп влево</item>
+        <item>Для того чтобы использовать все доступные пользователю функции войдите в аккаунт. Выбрав в меню пункт совместныый доступ. Вы можете создать новое расписание, по умолчанию заполняемое в соответствии с доступным на сайте Политеха.
+
+            Также вы можете подключиться к существующему расписанию для совместного редактирования, нажав на кнопку "Загрузить расписание". Для этого уже подключенный пользователь (или создатель) должен "поделиться" с вами расписанием, нажав на соответствующую кнопку и введя ваш почтовый адрес.
+        </item>
+    </string-array>
+
 </resources>

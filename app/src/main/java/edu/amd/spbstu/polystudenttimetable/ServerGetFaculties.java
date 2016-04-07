@@ -20,6 +20,7 @@ public class ServerGetFaculties extends AsyncTask<String, String, String>
     public ServerGetFaculties(ArrayAdapter<String> arrayAdapter)
     {
         m_adapterGroups = arrayAdapter;
+        StaticStorage.m_primatGroupsName.clear();
     }
     protected String doInBackground(String ... s)
     {

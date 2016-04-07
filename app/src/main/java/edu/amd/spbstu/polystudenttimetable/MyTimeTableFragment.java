@@ -1,7 +1,7 @@
 package edu.amd.spbstu.polystudenttimetable;
 
 import android.app.AlertDialog;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.net.Uri;
@@ -25,12 +25,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.wefika.calendar.CollapseCalendarView;
 import com.wefika.calendar.manager.CalendarManager;
+import com.wefika.calendar.manager.Month;
+import com.wefika.calendar.manager.Week;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
 import java.util.ArrayList;
@@ -75,7 +79,14 @@ public class MyTimeTableFragment extends Fragment
         }
 
         /* calendar init */
-        calendarManager = new CalendarManager(LocalDate.now(), CalendarManager.State.MONTH, LocalDate.now(), LocalDate.now().plusYears(1));
+
+        LocalDate t;
+        if(LocalDate.now().getMonthOfYear() > 8)
+            t = new LocalDate(LocalDate.now().getYear(), 9, 1);
+        else
+            t = new LocalDate(LocalDate.now().getYear(), 2, 1);
+
+        calendarManager = new CalendarManager(LocalDate.now(), CalendarManager.State.MONTH, t, t.plusMonths(4).minusDays(1));
         setHasOptionsMenu(true);
 //        calendarManager.toggleView();
     }
@@ -83,7 +94,7 @@ public class MyTimeTableFragment extends Fragment
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+        // Inflate the help for this fragment
         if(mRootView == null)
             mRootView = inflater.inflate(R.layout.fragment_time_table, container, false);
 
@@ -120,7 +131,7 @@ public class MyTimeTableFragment extends Fragment
 //        daytableView.setItemAnimator(new DefaultItemAnimator());
 //        daytableView.setHasFixedSize(true);
 
-        DayTableListAdapter adapter = new DayTableListAdapter(getActivity(), mAllClasses, mDay, daytableView, true);
+        DayTableListAdapter adapter = new DayTableListAdapter(getActivity(), mAllClasses, mDay, daytableView, true, ((MainNavigationDrawer)getActivity()).isGroup());
         daytableView.setAdapter(adapter);
         registerForContextMenu(daytableView);
         daytableView.setEmptyView(mRootView.findViewById(R.id.empty_class_view));
@@ -151,7 +162,8 @@ public class MyTimeTableFragment extends Fragment
                     currentLesson.m_isCanceled.put(mDay, true);
                     initTable();
                 }
-                new WriteFile(getActivity(), currentLesson.parent).execute();
+//                new WriteFile(getActivity(), currentLesson.parent).execute();
+                ((MainNavigationDrawer)getActivity()).write(currentLesson.parent);
                 return true;
             case R.id.menu_class_important:
                 Log.d("init", "mImportant");
@@ -163,12 +175,19 @@ public class MyTimeTableFragment extends Fragment
                     currentLesson.m_isImportant.put(mDay, true);
                     initTable();
                 }
-                new WriteFile(getActivity(), currentLesson.parent).execute();
+//                new WriteFile(getActivity(), currentLesson.parent).execute();
+                ((MainNavigationDrawer)getActivity()).write(currentLesson.parent);
                 return true;
             case R.id.menu_class_homework:
                 Log.d("init", "mHomework");
                 AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
                 final EditText edittext = new EditText(getActivity());
+
+/*
+                LinearLayout.LayoutParams lp = edittext.getLayoutParams();
+                lp.setMargins(10, 10, 10, 10);
+                edittext.setLayoutParams(lp);
+*/
 
                 edittext.setHint(R.string.homework_hint);
 
@@ -220,33 +239,6 @@ public class MyTimeTableFragment extends Fragment
                 alert.setView(edittext);
                 alert.setPositiveButton(R.string.btn_ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
-                        //What ever you want to do with the value
-                        /*
-                        String taskText = edittext.getText().toString();
-                        String[] lines = TextUtils.split(taskText, "\n");
-                        SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
-                        String line = null;
-                        for (int index = 0; index < lines.length; ++index) {
-                            line = lines[index];
-                            int length = spannableStringBuilder.length();
-                            spannableStringBuilder.append(line);
-                            if (index != lines.length - 1) {
-                                spannableStringBuilder.append("\n");
-                            } else if (TextUtils.isEmpty(line)) {
-                                spannableStringBuilder.append("\u200B");
-                            }
-                            spannableStringBuilder.setSpan(new BulletSpan(30), length, length + 1,
-                                    Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
-                        }
-                        if(mAllClasses.get(position).m_homework.containsKey(mDay))
-                            mAllClasses.get(position).m_homework.get(mDay).m_task = spannableStringBuilder;
-                        else {
-                            RegLessonInstance.Homework hw = mAllClasses.get(position).newHomework();
-                            hw.m_task = spannableStringBuilder.toString();
-                            mAllClasses.get(position).m_homework.put(mDay, hw);
-                        }
-                        */
-
                         if(mAllClasses.get(position).m_homework.containsKey(mDay))
                             mAllClasses.get(position).m_homework.get(mDay).m_task = edittext.getText().toString();
                         else {
@@ -255,7 +247,8 @@ public class MyTimeTableFragment extends Fragment
                             mAllClasses.get(position).m_homework.put(mDay, hw);
                         }
 
-                        new WriteFile(getActivity(), mAllClasses.get(position).parent).execute();
+//                        new WriteFile(getActivity(), mAllClasses.get(position).parent).execute();
+                        ((MainNavigationDrawer)getActivity()).write(mAllClasses.get(position).parent);
                         initTable();
                     }
                 });

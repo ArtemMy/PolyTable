@@ -41,13 +41,16 @@ public class DayTableListAdapter extends BaseAdapter
     LayoutInflater lInflater;
     ListView listView;
     boolean isMy;
-    DayTableListAdapter(Activity activity, List<RegLessonInstance> list, LocalDate day, ListView listView, boolean isMy) {
+    boolean isGroup;
+
+    DayTableListAdapter(Activity activity, List<RegLessonInstance> list, LocalDate day, ListView listView, boolean isMy, boolean isGroup) {
         this.act = activity;
         this.list = list;
         this.week = day;
         this.lInflater = (LayoutInflater) act.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         this.listView = listView;
         this.isMy = isMy;
+        this.isGroup = isGroup;
     }
     @Override
     public int getCount() {
@@ -68,7 +71,7 @@ public class DayTableListAdapter extends BaseAdapter
         if (view == null) {
             view = lInflater.inflate(R.layout.singleclass, parent, false);
         }
-        TextView mTime1, mTime2, mWhere, mType, mName;
+        TextView mTime1, mTime2, mWhere, mType, mName, mSubLine;
         ImageView mHomework, mCanceled, mImportant;
         CardView mCardView;
         RegLessonInstance mLesson;
@@ -78,6 +81,7 @@ public class DayTableListAdapter extends BaseAdapter
         mWhere = (TextView) view.findViewById(R.id.where);
         mType = (TextView) view.findViewById(R.id.type);
         mName = (TextView) view.findViewById(R.id.class_name);
+        mSubLine = (TextView) view.findViewById(R.id.sub_line);
 
         mHomework = (ImageView) view.findViewById(R.id.homework);
         if(!isMy)
@@ -101,6 +105,23 @@ public class DayTableListAdapter extends BaseAdapter
 
         mType.setText(class_type);
         mName.setText(lesson.parent.m_subject);
+
+        if(!isGroup) {
+            String str = "";
+            for(int i = 0; i != lesson.parent.m_list_groups.size(); ++i) {
+                str += lesson.parent.m_list_groups.get(i).m_name;
+                if(i != lesson.parent.m_list_groups.size() - 1)
+                    str += ", ";
+            }
+            mSubLine.setText(str);
+        }
+        else {
+            if (lesson.parent.m_teacher.m_fio != act.getResources().getString(R.string.not_set))
+                mSubLine.setText(lesson.parent.m_teacher.m_fio);
+            else
+                mSubLine.setText("");
+        }
+
 
         mCanceled.setVisibility(lesson.m_isCanceled.containsKey(week) ? View.VISIBLE : View.GONE);
         mHomework.setAlpha(lesson.m_homework.containsKey(week) ? 1.0f : 0.15f);

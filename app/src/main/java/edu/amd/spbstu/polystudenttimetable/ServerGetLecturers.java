@@ -98,6 +98,7 @@ public class ServerGetLecturers extends AsyncTask<String, String, String>
                     lect.m_id = (int)arrTeachers.optJSONObject(i).get("id");
                     if(adapter == null) {
                         new ServerGetTable(lect, mAct).execute();
+                        return;
                     }
                     adapter.add(lect.m_fio);
                     StaticStorage.m_listLecturers.add(lect);

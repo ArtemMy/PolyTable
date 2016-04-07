@@ -4,6 +4,7 @@ import com.google.android.gms.drive.DriveId;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class LecturerInfo implements Serializable
 {
@@ -16,7 +17,7 @@ public class LecturerInfo implements Serializable
     {
         m_chair     = "";
         m_id        = -1;
-        m_fio       = "";
+        m_fio       = Locale.getDefault().getDisplayLanguage().equals("English") ? "Not set" : "Не задан";
         m_listLessonsId = new ArrayList<String>();
         m_listLessonsId.clear();
     }

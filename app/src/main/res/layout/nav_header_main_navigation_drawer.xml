@@ -7,17 +7,41 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:theme="@style/ThemeOverlay.AppCompat.Dark" android:orientation="vertical"
+    android:theme="@style/ThemeOverlay.AppCompat.Dark" android:orientation="horizontal"
     android:gravity="center">
 
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:id="@+id/header_days"
-        android:gravity="center"
-        style="@style/header_humber" />
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="0dp"
+        android:layout_weight="0.5"
+        android:layout_height="@dimen/nav_header_height"
+        android:orientation="vertical"
+        android:gravity="center">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:id="@+id/header_days1"
+            android:gravity="center"
+            style="@style/header_humber" />
 
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="@string/header_text"
-        android:textSize="16sp"
-        android:id="@+id/header_days_sub" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:id="@+id/header_days_sub1" />
+    </LinearLayout>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/nav_header_height"
+        android:layout_weight="0.5"
+        android:orientation="vertical"
+        android:gravity="center">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:id="@+id/header_days2"
+            android:gravity="center"
+            style="@style/header_humber" />
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:id="@+id/header_days_sub2" />
+    </LinearLayout>
 
 </LinearLayout>

@@ -3,7 +3,7 @@ package edu.amd.spbstu.polystudenttimetable;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.ColorStateList;
@@ -32,13 +32,25 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
+import org.joda.time.LocalDate;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.Inflater;
 
 
@@ -56,9 +68,7 @@ public class MyDetailedClassFragment extends Fragment {
     // TODO: Rename and change types of parameters
     private static final String TAG = "polytable_log";
     private Lesson mLesson;
-    private ListView classesList = null;
-    private ArrayAdapter<String> cAdapter = null;
-    private ArrayList<String> classes = null;
+    private Lesson mEditLesson;
     boolean isEditMode = false;
     private ListView mGroupList;
     private ListView mInstList;
@@ -104,7 +114,7 @@ public class MyDetailedClassFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+        // Inflate the help for this fragment
         Log.d("init", mLesson.m_teacher.m_fio + String.valueOf(mLesson.m_teacher.m_id));
 
         if(view == null)
@@ -130,9 +140,50 @@ public class MyDetailedClassFragment extends Fragment {
                     myFab.setImageDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.edit_ic));
                     myFab.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorAccent)));
                     isEditMode = false;
+                    if (((TextView) mFio.findViewById(R.id.detailed_item_value)).getText().toString() != "")
+                        mEditLesson.m_teacher.m_fio = ((TextView) mFio.findViewById(R.id.detailed_item_value)).getText().toString();
+                    if (((MainNavigationDrawer) getActivity()).isGroup()) {
+                        Group gr = ((Group) ((MainNavigationDrawer) getActivity()).the_obj);
+                        int pos = gr.m_listLessons.indexOf(mEditLesson);
+                        if (pos >= 0)
+                            gr.m_listLessons.set(pos, mEditLesson);
+                        else {
+                            pos = gr.m_listLessons.indexOf(mLesson);
+                            gr.m_listLessons.set(pos, mEditLesson);
+                        }
+                    } else {
+                        Lecturer le = ((Lecturer) ((MainNavigationDrawer) getActivity()).the_obj);
+                        int pos = le.m_listLessons.indexOf(mEditLesson);
+                        if (pos >= 0)
+                            le.m_listLessons.set(pos, mEditLesson);
+                        else {
+                            pos = le.m_listLessons.indexOf(mLesson);
+                            le.m_listLessons.set(pos, mEditLesson);
+                        }
+                    }
+                    mLesson = mEditLesson;
+                    ((MainNavigationDrawer)getActivity()).write(mLesson);
+//                    new WriteFile(getActivity(), mLesson).execute();
                     init();
                 } else {
                     Log.d(TAG, "edit");
+                    try {
+                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                        ObjectOutputStream oos = new ObjectOutputStream(bos);
+                        oos.writeObject(mLesson);
+                        oos.flush();
+                        oos.close();
+
+                        ObjectInputStream in = new ObjectInputStream(
+                                new ByteArrayInputStream(bos.toByteArray()));
+                        mEditLesson = (Lesson) in.readObject();
+                    }
+                    catch(IOException e) {
+                        e.printStackTrace();
+                    }
+                    catch(ClassNotFoundException cnfe) {
+                        cnfe.printStackTrace();
+                    }
                     myFab.setImageDrawable(ContextCompat.getDrawable(getActivity(), R.drawable.tick));
                     myFab.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.colorAccept)));
                     isEditMode = true;
@@ -144,6 +195,34 @@ public class MyDetailedClassFragment extends Fragment {
         return view;
     }
 
+    public static void getTotalHeightofListView(ListView listView) {
+
+        ListAdapter mAdapter = listView.getAdapter();
+
+        int totalHeight = 0;
+
+        for (int i = 0; i < mAdapter.getCount(); i++) {
+            View mView = LayoutInflater.from(listView.getContext()).inflate(R.layout.detailed_item_list_item, null, false);
+
+            mView.setLayoutParams(new ListView.LayoutParams(ListView.LayoutParams.WRAP_CONTENT, ListView.LayoutParams.WRAP_CONTENT));
+            mView.measure(
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+
+            totalHeight += mView.getMeasuredHeight();
+            Log.w("HEIGHT" + i, String.valueOf(totalHeight));
+
+        }
+
+        ViewGroup.LayoutParams params = listView.getLayoutParams();
+        params.height = totalHeight
+                + (listView.getDividerHeight() * (mAdapter.getCount() - 1));
+        listView.setLayoutParams(params);
+        listView.requestLayout();
+
+    }
+
     private void init() {
         LayoutInflater inflater = LayoutInflater.from(getActivity());
         LinearLayout detailed_class_list = (LinearLayout) view.findViewById(R.id.detailed_container);
@@ -153,14 +232,14 @@ public class MyDetailedClassFragment extends Fragment {
 
         //        #1
         mFio = inflater.inflate(R.layout.detailed_item, detailed_class_list, false);
-        EditText mVal = ((EditText) mFio.findViewById(R.id.detailed_item_value));
-        mVal.setText(mLesson.m_teacher.m_fio);
+        TextView mVal = ((TextView) mFio.findViewById(R.id.detailed_item_value));
+
         if(!isEditMode) {
-            mVal.setEnabled(false);
-            mVal.setCursorVisible(false);
-            mVal.setKeyListener(null);
-            mVal.setBackgroundColor(Color.TRANSPARENT);
             mVal.setOnClickListener(mLectClickListener);
+            mVal.setText(mLesson.m_teacher.m_fio);
+        } else {
+            mVal.setOnClickListener(mLectChooseListener);
+            mVal.setText(mEditLesson.m_teacher.m_fio);
         }
         TextView mTitle = ((TextView) mFio.findViewById(R.id.detailed_item_title));
         mTitle.setText(titles[0]);
@@ -173,7 +252,14 @@ public class MyDetailedClassFragment extends Fragment {
         setText(titles[1]);
 
         mGroupList = (ListView) mGroups.findViewById(R.id.detailed_item_list_list);
-        mGroupListAdapter = new ArrayAdapter<GroupInfo>(inflater.getContext(), R.layout.detailed_item_list_item, mLesson.m_list_groups) {
+
+        List<GroupInfo> listGroupInfo;
+        if(isEditMode)
+            listGroupInfo = mEditLesson.m_list_groups;
+        else
+            listGroupInfo = mLesson.m_list_groups;
+
+        mGroupListAdapter = new ArrayAdapter<GroupInfo>(inflater.getContext(), R.layout.detailed_item_list_item, listGroupInfo) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View holder;
@@ -198,6 +284,7 @@ public class MyDetailedClassFragment extends Fragment {
                             GroupInfo gr = (GroupInfo) mGroupListAdapter.getItem(position);
                             mGroupListAdapter.remove(gr);
                             mGroupListAdapter.notifyDataSetChanged();
+                            getTotalHeightofListView(mGroupList);
                         }
                     });
                 }
@@ -205,29 +292,10 @@ public class MyDetailedClassFragment extends Fragment {
             }
         };
 
-        int numberOfItems = mGroupListAdapter.getCount();
-        // Get total height of all items.
-        int totalItemsHeight = 0;
-        for (
-                int itemPos = 0;
-                itemPos < numberOfItems; itemPos++)
-
-        {
-            View it = mGroupListAdapter.getView(itemPos, null, (ListView) mGroupList);
-            it.measure(0, 0);
-            totalItemsHeight += it.getMeasuredHeight();
-        }
-
-        int totalDividersHeight = mGroupList.getDividerHeight() * (numberOfItems - 1);
-
-        ViewGroup.LayoutParams params = mGroupList.getLayoutParams();
-        params.height = totalItemsHeight + totalDividersHeight;
-        mGroupList.setLayoutParams(params);
-        mGroupList.requestLayout();
-
-        Log.d("init", "adapter.getCount():" + String.valueOf(mGroupListAdapter.getCount()));
-
         mGroupList.setAdapter(mGroupListAdapter);
+
+        getTotalHeightofListView(mGroupList);
+
         // ListView Item Click Listener
         if(!isEditMode)
             mGroupList.setOnItemClickListener(mGroupClickListener);
@@ -254,6 +322,8 @@ public class MyDetailedClassFragment extends Fragment {
                                 public void onClick(DialogInterface dialog, int which) {
                                     GroupInfo tmpGroup = StaticStorage.m_primatGroups.get(which);
                                     mGroupListAdapter.add(tmpGroup);
+                                    mGroupListAdapter.notifyDataSetChanged();
+                                    getTotalHeightofListView(mGroupList);
                                 }
                             });
                     final Dialog dialog = builder.create();
@@ -269,12 +339,13 @@ public class MyDetailedClassFragment extends Fragment {
                 setText(titles[2]);
 
         mInstList = (ListView) mInst.findViewById(R.id.detailed_item_list_list);
-        Log.d("init", String.valueOf(mLesson.getAllLessonInstances().
+        List<RegLessonInstance> listInst;
+        if(isEditMode)
+            listInst = mEditLesson.getAllLessonInstances();
+        else
+            listInst = mLesson.getAllLessonInstances();
 
-                        size()
-
-        ));
-        mInstListAdapter = new ArrayAdapter<RegLessonInstance>(inflater.getContext(), R.layout.detailed_item_list_item, mLesson.getAllLessonInstances()) {
+        mInstListAdapter = new ArrayAdapter<RegLessonInstance>(inflater.getContext(), R.layout.detailed_item_list_item, listInst) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View holder;
@@ -304,33 +375,17 @@ public class MyDetailedClassFragment extends Fragment {
                             final int position = mInstList.getPositionForView((View) v.getParent());
                             RegLessonInstance rli = (RegLessonInstance) mInstListAdapter.getItem(position);
                             mInstListAdapter.remove(rli);
-                            mLesson.m_reg.get(rli.m_day).remove(rli);
+                            mEditLesson.m_reg.get(rli.m_day).remove(rli);
                             mInstListAdapter.notifyDataSetChanged();
+                            getTotalHeightofListView(mInstList);
                         }
                     });
                 }
                 return holder;
             }
         };
-
-        numberOfItems=mInstListAdapter.getCount();
-        // Get total height of all items.
-        totalItemsHeight=0;
-        for(int itemPos = 0; itemPos<numberOfItems;itemPos++)
-        {
-            View it = mInstListAdapter.getView(itemPos, null, mInstList);
-            it.measure(0, 0);
-            totalItemsHeight += it.getMeasuredHeight();
-        }
-
-        totalDividersHeight=mInstList.getDividerHeight()*(numberOfItems-1);
-
-        params=mInstList.getLayoutParams();
-        params.height=totalItemsHeight+totalDividersHeight;
-        mInstList.setLayoutParams(params);
-        mInstList.requestLayout();
-
         mInstList.setAdapter(mInstListAdapter);
+        getTotalHeightofListView(mInstList);
         detailed_class_list.addView(mInst);
 
         if(isEditMode) {
@@ -347,32 +402,79 @@ public class MyDetailedClassFragment extends Fragment {
                     dialogBuilder.setView(dialogView);
 
                     dialogBuilder.setTitle(getResources().getString(R.string.newn_str));
-                    dialogBuilder.setPositiveButton(R.string.btn_ok, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int whichButton) {
-                            RegLessonInstance rli = new RegLessonInstance(mLesson);
-                            rli.m_day = ((Spinner) dialogView.findViewById(R.id.newn_day_val)).getSelectedItemPosition();
-                            rli.m_type = ((Spinner) dialogView.findViewById(R.id.newn_type_val)).getSelectedItemPosition();
-                            rli.m_weekly = RegLessonInstance.weekly_t.values()[((Spinner) dialogView.findViewById(R.id.newn_odd_val)).getSelectedItemPosition()];
-                            rli.m_buildingName = ((EditText)dialogView.findViewById(R.id.newn_build)).getText().toString();
-                            rli.m_roomName = ((EditText)dialogView.findViewById(R.id.newn_room)).getText().toString();
-                            rli.m_timeStart= String.valueOf(((TimePicker)dialogView.findViewById(R.id.newn_start_val)).getCurrentHour()) + ":" +
-                                    String.valueOf(((TimePicker)dialogView.findViewById(R.id.newn_start_val)).getCurrentMinute());
-                            rli.m_timeEnd= String.valueOf(((TimePicker)dialogView.findViewById(R.id.newn_end_val)).getCurrentHour()) + ":" +
-                                    String.valueOf(((TimePicker)dialogView.findViewById(R.id.newn_end_val)).getCurrentMinute());
-                            if(mLesson.m_reg.containsKey(rli.m_day))
-                                mLesson.m_reg.get(rli.m_day).add(rli);
-                            else {
-                                mLesson.m_reg.put(rli.m_day, new ArrayList<RegLessonInstance>());
-                                mLesson.m_reg.get(rli.m_day).add(rli);
-                            }
-                        }
-                    });
+                    dialogBuilder.setPositiveButton(R.string.btn_ok, null);
                     dialogBuilder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int whichButton) {
                             //pass
                         }
                     });
-                    final Dialog dialog = dialogBuilder.create();
+                    final AlertDialog dialog = dialogBuilder.create();
+                    dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                        @Override
+                        public void onShow(DialogInterface d) {
+
+                            ((TimePicker)dialogView.findViewById(R.id.newn_start_val)).setIs24HourView(true);
+                            ((TimePicker)dialogView.findViewById(R.id.newn_end_val)).setIs24HourView(true);
+
+                            Button b = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                            b.setOnClickListener(new View.OnClickListener() {
+
+                                @Override
+                                public void onClick(View view) {
+
+                                    RegLessonInstance rli = new RegLessonInstance(mEditLesson);
+
+                                    rli.m_day = ((Spinner) dialogView.findViewById(R.id.newn_day_val)).getSelectedItemPosition();
+                                    rli.m_type = ((Spinner) dialogView.findViewById(R.id.newn_type_val)).getSelectedItemPosition();
+                                    rli.m_weekly = RegLessonInstance.weekly_t.values()[((Spinner) dialogView.findViewById(R.id.newn_odd_val)).getSelectedItemPosition()];
+                                    rli.m_buildingName = ((EditText)dialogView.findViewById(R.id.newn_build)).getText().toString();
+                                    rli.m_roomName = ((EditText)dialogView.findViewById(R.id.newn_room)).getText().toString();
+                                    rli.m_timeStart= String.valueOf(((TimePicker)dialogView.findViewById(R.id.newn_start_val)).getCurrentHour()) + ":" +
+                                            String.valueOf(((TimePicker)dialogView.findViewById(R.id.newn_start_val)).getCurrentMinute());
+                                    rli.m_timeEnd= String.valueOf(((TimePicker)dialogView.findViewById(R.id.newn_end_val)).getCurrentHour()) + ":" +
+                                            String.valueOf(((TimePicker)dialogView.findViewById(R.id.newn_end_val)).getCurrentMinute());
+
+                                    if(rli.m_buildingName.isEmpty()) {
+                                        ((TextView)dialogView.findViewById(R.id.newn_message)).setText(getResources().getString(R.string.newn_wrn_bld));
+                                        return;
+                                    }
+                                    if(rli.m_roomName.isEmpty()) {
+                                        ((TextView)dialogView.findViewById(R.id.newn_message)).setText(getResources().getString(R.string.newn_wrn_room));
+                                        return;
+                                    }
+                                    if(((TimePicker)dialogView.findViewById(R.id.newn_start_val)).getCurrentHour() > 18
+                                            || ((TimePicker)dialogView.findViewById(R.id.newn_start_val)).getCurrentHour() < 8
+                                            || ((TimePicker)dialogView.findViewById(R.id.newn_end_val)).getCurrentHour() > 18
+                                            || ((TimePicker)dialogView.findViewById(R.id.newn_end_val)).getCurrentHour() < 8
+                                            || ((TimePicker)dialogView.findViewById(R.id.newn_start_val)).getCurrentHour() >
+                                            ((TimePicker)dialogView.findViewById(R.id.newn_end_val)).getCurrentHour()
+                                            || (((TimePicker)dialogView.findViewById(R.id.newn_start_val)).getCurrentHour() ==
+                                            ((TimePicker)dialogView.findViewById(R.id.newn_end_val)).getCurrentHour()
+                                            && ((TimePicker)dialogView.findViewById(R.id.newn_start_val)).getCurrentMinute() >
+                                            ((TimePicker)dialogView.findViewById(R.id.newn_end_val)).getCurrentMinute())
+                                            ) {
+                                        Log.d(TAG, ((TimePicker)dialogView.findViewById(R.id.newn_start_val)).getCurrentHour().toString());
+                                        Log.d(TAG, ((TimePicker)dialogView.findViewById(R.id.newn_end_val)).getCurrentHour().toString());
+                                        ((TextView)dialogView.findViewById(R.id.newn_message)).setText(getResources().getString(R.string.newn_wrn_time));
+                                        return;
+                                    }
+
+                                    if(mEditLesson.m_reg.containsKey(rli.m_day))
+                                        mEditLesson.m_reg.get(rli.m_day).add(rli);
+                                    else {
+                                        mEditLesson.m_reg.put(rli.m_day, new ArrayList<RegLessonInstance>());
+                                        mEditLesson.m_reg.get(rli.m_day).add(rli);
+                                    }
+                                    mInstListAdapter.clear();
+                                    mInstListAdapter.addAll(mEditLesson.getAllLessonInstances());
+                                    mInstListAdapter.notifyDataSetChanged();
+                                    getTotalHeightofListView(mInstList);
+
+                                    dialog.dismiss();
+                                }
+                            });
+                        }
+                    });
                     dialog.show();
                 }
             });
@@ -390,11 +492,44 @@ public class MyDetailedClassFragment extends Fragment {
         }
 
     };
+
+    private View.OnClickListener mLectChooseListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View view) {
+            if(StaticStorage.m_primatLectName.isEmpty()) {
+                new ServerGetPrimatLecturers(getActivity(), false).execute();
+            }
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setTitle(getActivity().getResources().getString(R.string.str_depth));
+            builder.setIcon(R.drawable.logo_amd_mod);
+//                        ListView modeList = new ListView(getActivity());
+            final ArrayAdapter<String> modeAdapter = new ArrayAdapter<String>(getActivity(),
+                    android.R.layout.simple_list_item_1, android.R.id.text1,
+                    StaticStorage.m_primatLectName);
+            builder.setAdapter(modeAdapter,
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            String str = StaticStorage.m_primatLectName.get(which);
+                            mEditLesson.m_teacher.m_fio = str;
+                            ((TextView) mFio.findViewById(R.id.detailed_item_value)).setText(str);
+                            dialog.dismiss();
+                        }
+                    });
+            final Dialog dialog = builder.create();
+            dialog.show();
+
+        }
+
+    };
+
     private View.OnClickListener mLectClickListener = new View.OnClickListener() {
 
         @Override
         public void onClick(View view) {
-            new ServerGetTable(mLesson.m_teacher, getActivity()).execute();
+            if(mLesson.m_teacher.m_fio != getActivity().getResources().getString(R.string.not_set))
+                new ServerGetTable(mLesson.m_teacher, getActivity()).execute();
         }
 
     };

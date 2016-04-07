@@ -1,9 +1,12 @@
 package edu.amd.spbstu.polystudenttimetable;
 
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Fragment;
-import android.app.FragmentManager;
+import android.app.ProgressDialog;
+import android.content.ContentValues;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -39,9 +42,14 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.auth.GoogleAuthUtil;
+import com.google.android.gms.common.AccountPicker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -50,54 +58,73 @@ import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveApi;
 import com.google.android.gms.drive.DriveContents;
 import com.google.android.gms.drive.DriveFolder;
+import com.google.android.gms.drive.DriveId;
 import com.google.android.gms.drive.DriveResource;
 import com.google.android.gms.drive.Metadata;
 import com.google.android.gms.drive.MetadataBuffer;
 import com.google.android.gms.drive.MetadataChangeSet;
+import com.google.android.gms.drive.OpenFileActivityBuilder;
 import com.google.android.gms.drive.query.Filters;
 import com.google.android.gms.drive.query.Query;
 import com.google.android.gms.drive.query.SearchableField;
-import com.google.android.gms.plus.Plus;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAuthIOException;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 
 import org.joda.time.DateTimeConstants;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import org.xmlpull.v1.XmlSerializer;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
 public class MainNavigationDrawer extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         DetailedClassFragment.OnFragmentInteractionListener,
+        LoginFragment.OnFragmentInteractionListener,
+        MyDetailedClassFragment.OnFragmentInteractionListener,
+        MyHomeworkFragment.OnFragmentInteractionListener,
+        MyTimeTableFragment.OnFragmentInteractionListener,
+        SearchFragment.OnFragmentInteractionListener,
         TimeTableFragment.OnFragmentInteractionListener,
+        REST.ConnectCBs
 //        GoogleApiClient.ConnectionCallbacks,
 //        GoogleApiClient.OnConnectionFailedListener,
-        SearchFragment.OnFragmentInteractionListener
 {
 
 
 //    DBHelper dbHelper;
     private static final String TAG = "polytable_log";
+    private static final String LOCAL_FILE = "localtt.data";
 
     private static final int REQUEST_CODE_CAPTURE_IMAGE = 1;
     private static final int REQUEST_CODE_CREATOR = 2;
     private static final int REQUEST_CODE_RESOLUTION = 3;
     private static final int REQUEST_CODE_OPENER = 4;
+    private static final int REQ_ACCPICK = 1;
+    private static final int REQ_CONNECT = 2;
+    static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
 
     static final String PREF_IS_LOGGED_IN= "poly_table_logged_in";
     static final String PREF_GROUP= "poly_table_is_group";
+    static final String PREF_FILE_ID = "poly_table_file_id";
     private boolean isLoggedIn;
-
     public Object the_obj = null;
 
     public void onFragmentInteraction(Uri uri)
     {
         return;
     }
-    private SearchTabFragment mSTF;
     static private  boolean justStarted = true;
 //    GoogleApiClient mGoogleApiClient;
 
@@ -109,8 +136,8 @@ public class MainNavigationDrawer extends AppCompatActivity
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        mSTF = new SearchTabFragment();
         getSupportActionBar().setTitle("");
+
 
 /*
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -121,6 +148,8 @@ public class MainNavigationDrawer extends AppCompatActivity
                 .addOnConnectionFailedListener(this)
                 .build();
          */
+        UT.init(this);
+        if (!REST.init(this));
 
         isLoggedIn = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(PREF_IS_LOGGED_IN, false);
 
@@ -131,6 +160,9 @@ public class MainNavigationDrawer extends AppCompatActivity
         Map<Integer, Lecturer> tmp_lects = (Map<Integer, Lecturer>)(LocalPersistence.readObjectFromFile(getApplicationContext(), "recent_lects.data"));
         if(tmp_lects != null)
             StaticStorage.m_recentLecturers = tmp_lects;
+        if (!isOnline()) {
+            the_obj = LocalPersistence.readObjectFromFile(getApplicationContext(), LOCAL_FILE);
+        }
         /*
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -154,23 +186,28 @@ public class MainNavigationDrawer extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
 
+        if(isOnline())
+            new ServerGetPrimatLecturers(this, false).execute();
         // number in header
         View nav_header = LayoutInflater.from(this).inflate(R.layout.nav_header_main_navigation_drawer, null);
         Log.d("init", nav_header.toString());
-        TextView tv = (TextView) nav_header.findViewById(R.id.header_days);
+        TextView tv = (TextView) nav_header.findViewById(R.id.header_days1);
         Log.d("init", tv.toString());
         tv.setText(String.valueOf(daysToExams()));
-
-        TextView subtv = (TextView) nav_header.findViewById(R.id.header_days_sub);
+        tv = (TextView) nav_header.findViewById(R.id.header_days2);
         Log.d("init", tv.toString());
-        switch(daysToExams()) {
+        tv.setText(String.valueOf(daysToExams() + 7));
+
+        TextView subtv = (TextView) nav_header.findViewById(R.id.header_days_sub1);
+        Log.d("init", tv.toString());
+        switch(daysToExams() % 10) {
             case 1:
-                tv.setText(getResources().getString(R.string.header_text1));
+                subtv.setText(getResources().getString(R.string.header_1text1));
                 break;
             case 2:
             case 3:
             case 4:
-                tv.setText(getResources().getString(R.string.header_text234));
+                subtv.setText(getResources().getString(R.string.header_1text234));
                 break;
             case 5:
             case 6:
@@ -178,7 +215,27 @@ public class MainNavigationDrawer extends AppCompatActivity
             case 8:
             case 9:
             case 0:
-                tv.setText(getResources().getString(R.string.header_text56789));
+                subtv.setText(getResources().getString(R.string.header_1text56789));
+                break;
+        }
+        subtv = (TextView) nav_header.findViewById(R.id.header_days_sub2);
+        Log.d("init", tv.toString());
+        switch((daysToExams() + 7) % 10) {
+            case 1:
+                subtv.setText(getResources().getString(R.string.header_2text1));
+                break;
+            case 2:
+            case 3:
+            case 4:
+                subtv.setText(getResources().getString(R.string.header_2text234));
+                break;
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 0:
+                subtv.setText(getResources().getString(R.string.header_2text56789));
                 break;
         }
 
@@ -187,11 +244,10 @@ public class MainNavigationDrawer extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         Log.d("init", "begin transaction");
-        SearchTabFragment lf = new SearchTabFragment();
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.add(R.id.container, lf, lf.toString());
-        ft.addToBackStack(null);
-        ft.commit();
+        android.support.v4.app.Fragment frg = new SearchTabFragment();
+        getSupportFragmentManager().beginTransaction().replace(R.id.container, frg, "search")
+                .addToBackStack(null)
+                .commit();
         navigationView.getMenu().getItem(3).setChecked(true);
     }
 
@@ -199,9 +255,6 @@ public class MainNavigationDrawer extends AppCompatActivity
     protected void onStart() {
         Log.d("init", "onStart");
         super.onStart();
-        if(isLoggedIn()) {
-            update();
-        }
 //        mGoogleApiClient.connect();
     }
 
@@ -227,8 +280,8 @@ public class MainNavigationDrawer extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            if (getFragmentManager().getBackStackEntryCount() > 0 ){
-                getFragmentManager().popBackStack();
+            if (getSupportFragmentManager().getBackStackEntryCount() > 0 ) {
+                getSupportFragmentManager().popBackStack();
             } else {
                 super.onBackPressed();
             }
@@ -264,34 +317,58 @@ public class MainNavigationDrawer extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
 
         Fragment fragment = null;
-        FragmentManager fragmentManager = getFragmentManager();
+        FragmentManager fragmentManager = getSupportFragmentManager();
         // Handle navigation view item clicks here.
         int id = item.getItemId();
         switch(id) {
             case R.id.nav_search:
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        switchContent(new SearchTabFragment());
-                    }
-                }, 275);
+                int currentapiVersion = android.os.Build.VERSION.SDK_INT;
+
+                switchContent(new SearchTabFragment());
+
+/*
+                Intent intent = getIntent();
+                finish();
+                startActivity(intent);
+                if (currentapiVersion >= 17) {
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+//                            switchContent(new SearchTabFragment());
+                            android.support.v4.app.Fragment frg = new SearchTabFragment();
+                            getSupportFragmentManager().beginTransaction().replace(R.id.container, frg, "search")
+                                    .addToBackStack(null).commit();
+                        }
+                    }, 275);
+                } else {
+                    Intent intent = getIntent();
+                    finish();
+                    startActivity(intent);
+                }
+                */
                 break;
             case R.id.nav_about:
-                FragmentManager fm = getFragmentManager();
+                FragmentManager fm = getSupportFragmentManager();
                 for (int i = 0; i < fm.getBackStackEntryCount(); ++i) {
                     fm.popBackStack();
                 }
                 Intent i = new Intent(this, ActivityMain.class);
+                finish();
                 startActivity(i);
                 break;
+            case R.id.nav_help:
+                NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+                switchContent(new MyHelpFragment(this));
+                break;
+
             case R.id.nav_login:
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        FragmentTransaction ft = getFragmentManager().beginTransaction();
-                        ft.replace(R.id.container, new LoginFragment(), "login");
-                        ft.addToBackStack(null);
-                        ft.commit();
+                        getSupportFragmentManager().beginTransaction()
+                                .replace(R.id.container, new LoginFragment(), "login")
+                                .addToBackStack(null)
+                                .commit();
                     }
                 }, 275);
 /*
@@ -319,7 +396,7 @@ public class MainNavigationDrawer extends AppCompatActivity
                                 .show();
                     }
                 } else {
-                    NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+                    navigationView = (NavigationView) findViewById(R.id.nav_view);
                     navigationView.getMenu().getItem(0).setChecked(true);
                     new Handler().postDelayed(new Runnable() {
                         @Override
@@ -347,7 +424,7 @@ public class MainNavigationDrawer extends AppCompatActivity
                                 .show();
                     }
                 } else {
-                    NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+                    navigationView = (NavigationView) findViewById(R.id.nav_view);
                     navigationView.getMenu().getItem(0).setChecked(true);
                     new Handler().postDelayed(new Runnable() {
                         @Override
@@ -378,26 +455,385 @@ public class MainNavigationDrawer extends AppCompatActivity
     }
 
     public void switchContent(Fragment fragment) {
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.replace(R.id.container, fragment, fragment.toString());
-        ft.addToBackStack(null);
-        ft.commit();
+
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.container, fragment, fragment.toString())
+                .addToBackStack(null)
+                .commit();
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int result, Intent data) {
         Log.i("google_drive_on_act_res", "hereherehere in activity");
+        switch (requestCode) {
+            case REQ_ACCPICK:
+                Log.d(TAG, "REQ_ACCPICK");
+                if (data != null && data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME) != null) {
+                    Log.d(TAG, "data != null");
+                    UT.AM.setEmail(data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME));
+                    REST.connect();
+                }
+                if (!REST.init(this)) {                                                    UT.lg("act result - NO ACCOUNT");
+                    suicide(R.string.try_again); //---------------------------------->>>
+                }
+                return;
+            case REQ_CONNECT:
+                if (result == RESULT_OK)
+                    REST.connect();
+                else {                                                                       UT.lg("act result - NO AUTH");
+                    suicide(R.string.wrong_data);  //---------------------------------->>>
+                }
+                return;
+        }
         if(((NavigationView) findViewById(R.id.nav_view)).getMenu().getItem(0).isChecked()) {
-                LoginFragment fragment = (LoginFragment) getFragmentManager()
+                LoginFragment fragment = (LoginFragment) getSupportFragmentManager()
                         .findFragmentByTag("login");
                 LoginFragment lf = new LoginFragment();
                 lf.toString();
-                fragment.onActivityResult(requestCode, resultCode, data);
+                fragment.onActivityResult(requestCode, result, data);
             }
-        else
-            super.onActivityResult(requestCode, resultCode, data);
+        else {
+            super.onActivityResult(requestCode, result, data);
+        }
+    }
+    private void suicide(int rid) {
+        UT.AM.setEmail(null);
+        Snackbar snackbar = Snackbar
+                .make(findViewById(R.id.main_coord_layout), getResources().getString(rid), Snackbar.LENGTH_LONG);
+        snackbar.show();
+    }
+
+    private void suicide(String msg) {
+        UT.AM.setEmail(null);
+        Snackbar snackbar = Snackbar
+                .make(findViewById(R.id.main_coord_layout), msg, Snackbar.LENGTH_LONG);
+        snackbar.show();
+    }
+
+    @Override
+    protected void onResume() {  super.onResume();
+        REST.connect();
+    }
+    @Override
+    protected void onPause() {  super.onPause();
+        REST.disconnect();
+    }
+    @Override
+    public void onConnOK() {
+        Log.d(TAG, "\n\nCONNECTED TO: " + UT.AM.getEmail());
+        if(isLoggedIn()) {
+            update();
+        }
+    }
+
+    @Override
+    public void onConnFail(Exception ex) {
+        Log.d(TAG, "\n\nCONNECTION FAIL!");
+        if(!isOnline()) {
+            update();
+            return;
+        }
+
+        if (ex == null) {                                                         UT.lg("connFail - UNSPECD 1");
+            suicide(R.string.try_again);  return;  //---------------------------------->>>
+        }
+        if (ex instanceof UserRecoverableAuthIOException) {                        UT.lg("connFail - has res");
+            startActivityForResult((((UserRecoverableAuthIOException) ex).getIntent()), REQ_CONNECT);
+        } else if (ex instanceof GoogleAuthIOException) {                          UT.lg("connFail - SHA1?");
+            if (ex.getMessage() != null) suicide(ex.getMessage());  //--------------------->>>
+            else  suicide(R.string.try_again);  //---------------------------------->>>
+        } else {                                                                  UT.lg("connFail - UNSPECD 2");
+            suicide(R.string.try_again);  //---------------------------------->>>
+        }
+    }
+
+    public void createTree(final Object obj) {
+        new AsyncTask<Void, String, Boolean>() {
+            ProgressDialog pb;
+
+            private String findOrCreateFolder(String prnt, String titl){
+                ArrayList<ContentValues> cvs = REST.search(prnt, titl, UT.MIME_FLDR);
+                String id, txt;
+                if (cvs.size() > 0) {
+                    txt = "found ";
+                    id =  cvs.get(0).getAsString(UT.GDID);
+                } else {
+                    id = REST.createFolder(prnt, titl);
+                    txt = "created ";
+                }
+                if (id != null)
+                    txt += titl;
+                else
+                    txt = "failed " + titl;
+                publishProgress(txt);
+                return id;
+            }
+
+            @Override
+            protected Boolean doInBackground(Void... params) {
+                String titl;
+                Object gen;
+                List<Lesson> lessons;
+                List<String> ids;
+
+                if (obj instanceof Group) {
+                    titl = String.valueOf(((Group) obj).m_info.m_id);
+                    gen = ((Group) obj).m_info;
+                    lessons = ((Group) obj).m_listLessons;
+                    ids = ((Group)obj).m_info.m_listLessonsId;
+                } else if (obj instanceof Lecturer){
+                    titl = String.valueOf(((Lecturer) obj).m_info.m_id);
+                    gen = ((Lecturer)obj).m_info;
+                    lessons = ((Lecturer) obj).m_listLessons;
+                    ids = ((Lecturer)obj).m_info.m_listLessonsId;
+                } else {
+                    return null;
+                }
+                String rsid = findOrCreateFolder("root", UT.MYROOT);
+                if (rsid != null) {
+                    rsid = findOrCreateFolder(rsid, UT.titl2Month(titl));
+                    if (rsid != null) {
+                        // others
+                        ids.clear();
+                        for(int i = 0; i < lessons.size(); ++i) {
+                            File fll = UT.byte2File(serializableToByte(lessons.get(i)), "tmp");
+                            String id = null;
+                            if (fll != null) {
+                                id = REST.createFile(rsid, String.valueOf(lessons.get(i).hashCode()), UT.MIME_TEXT, fll);
+                                fll.delete();
+                            }
+                            lessons.get(i).driveFileId = id;
+                            ids.add(i, id);
+                        }
+                        // main file
+                        File fl = UT.byte2File(serializableToByte(gen), "tmp");
+                        String gid = null;
+                        if (fl != null) {
+                            gid = REST.createFile(rsid, titl, UT.MIME_TEXT, fl);
+                            fl.delete();
+                        }
+                        Log.d(TAG, "created general");
+                        SharedPreferences.Editor editor = getSharedPreferences(
+                                getPackageName(), Context.MODE_PRIVATE).edit();
+                        editor.putString(PREF_FILE_ID, gid);
+                        editor.commit();
+                        Log.d(TAG, "saved");
+
+                        the_obj = obj;
+                        setIsLoggedIn(true);
+                        switchContent(new MyTimeTableFragment());
+                    }
+                }
+                return true;
+            }
+            @Override
+            protected void onProgressUpdate(String... strings) { super.onProgressUpdate(strings);
+                Log.d(TAG, strings[0]);
+            }
+            @Override
+            protected void onPostExecute(Boolean nada) {
+                super.onPostExecute(nada);
+                Log.d(TAG, "DONE");
+                pb.dismiss();
+                if(nada == null) {
+                    Snackbar snackbar = Snackbar
+                            .make(findViewById(R.id.main_coord_layout), getResources().getString(R.string.error), Snackbar.LENGTH_LONG);
+                    snackbar.show();
+                } else {
+                    Snackbar snackbar = Snackbar
+                            .make(findViewById(R.id.main_coord_layout), getResources().getString(R.string.load_success), Snackbar.LENGTH_LONG);
+                    snackbar.show();
+                }
+            }
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                Log.d(TAG, "DO");
+                pb = new ProgressDialog(MainNavigationDrawer.this);
+                pb.setMessage(MainNavigationDrawer.this.getResources().getString(R.string.placeholder_downloading));
+
+                pb.setCancelable(true);
+                pb.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        cancel(true);
+                    }
+                });
+                pb.show();
+            }
+        }.execute();
+    }
+
+    public void write(final Lesson lesson) {
+        new AsyncTask<Void, String, String>() {
+            ProgressDialog pb;
+            @Override
+            protected String doInBackground(Void... params) {
+
+                File fl = UT.byte2File(serializableToByte(lesson), "tmp");
+                return REST.update(lesson.driveFileId, String.valueOf(lesson.hashCode()), UT.MIME_TEXT, null, fl);
+            }
+            @Override
+            protected void onProgressUpdate(String... strings) { super.onProgressUpdate(strings);
+                Log.d(TAG, strings[0]);
+            }
+            @Override
+            protected void onPostExecute(String nada) {
+                super.onPostExecute(nada);
+                Log.d(TAG, "DONE");
+                pb.dismiss();
+                if(nada == null) {
+                    Snackbar snackbar = Snackbar
+                            .make(findViewById(R.id.main_coord_layout), getResources().getString(R.string.error), Snackbar.LENGTH_LONG);
+                    snackbar.show();
+                } else {
+                    LocalPersistence.writeObjectToFile(getApplicationContext(), the_obj, LOCAL_FILE);
+                    Snackbar snackbar = Snackbar
+                            .make(findViewById(R.id.main_coord_layout), getResources().getString(R.string.load_success), Snackbar.LENGTH_LONG);
+                    snackbar.show();
+                }
+            }
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                Log.d(TAG, "DO");
+                pb = new ProgressDialog(MainNavigationDrawer.this);
+                pb.setMessage(MainNavigationDrawer.this.getResources().getString(R.string.placeholder_saving));
+                pb.show();
+            }
+
+        }.execute();
     }
 /*
+    public void update() {
+        if (isLoggedIn()) {
+            new UpdateFiles(this, the_obj).execute();
+        }
+        else {
+            new AlertDialog.Builder(this)
+                    .setTitle(getResources().getString(R.string.error))
+                    .setMessage(getResources().getString(R.string.relogin))
+                    .setPositiveButton(android.R.string.ok, null) // dismisses by default
+                    .create()
+                    .show();
+        }
+    }
+     */
+
+    public void update() {
+        if (!isLoggedIn()) {
+            new AlertDialog.Builder(this)
+                    .setTitle(getResources().getString(R.string.error))
+                    .setMessage(getResources().getString(R.string.relogin))
+                    .setPositiveButton(android.R.string.ok, null) // dismisses by default
+                    .create()
+                    .show();
+            return;
+        }
+        new AsyncTask<Void, String, Boolean>() {
+
+            @Override
+            protected Boolean doInBackground(Void... params) {
+                Log.d(TAG, "loading general");
+
+                String gid = getSharedPreferences("edu.amd.spbstu.polystudenttimetable", Context.MODE_PRIVATE).getString(PREF_FILE_ID, null);
+                if(gid == null)
+                    Log.d(TAG, "gid == null");
+                if (gid == null)  { return null; }
+
+
+                byte[] by = REST.read(gid);
+                Log.d(TAG, "here");
+                if(by == null) return  null;
+
+                Log.d(TAG, String.valueOf(by.hashCode()));
+
+                Object obj = bytesToSerializable(by);
+                if(obj == null) return  null;
+
+                List<Lesson> lessons;
+                List<String> ids;
+                Object result;
+                if(obj instanceof GroupInfo) {
+                    result = new Group();
+                    ((Group)result).m_info = (GroupInfo)obj;
+                    lessons = ((Group)result).m_listLessons;
+                    ids = ((Group)result).m_info.m_listLessonsId;
+                } else if(obj instanceof LecturerInfo) {
+                    result = new Lecturer();
+                    ((Lecturer)result).m_info = (LecturerInfo)obj;
+                    lessons = ((Lecturer)result).m_listLessons;
+                    ids = ((Lecturer)result).m_info.m_listLessonsId;
+                } else {
+                    return null;
+                }
+
+                for(int i = 0; i < ids.size(); ++i) {
+                    byte[] lby = REST.read(ids.get(i));
+                    if(lby == null) return  null;
+                    lessons.add(i, (Lesson)bytesToSerializable(lby));
+                    if(lessons.get(i) == null) return  null;
+
+                    lessons.get(i).driveFileId = ids.get(i);
+                }
+                Log.d(TAG, "4");
+                the_obj = result;
+                LocalPersistence.writeObjectToFile(getApplicationContext(), the_obj, LOCAL_FILE);
+
+                return true;
+            }
+            @Override
+            protected void onProgressUpdate(String... strings) { super.onProgressUpdate(strings);
+                Log.d(TAG, strings[0]);
+            }
+            @Override
+            protected void onPostExecute(Boolean nada) {
+                super.onPostExecute(nada);
+                findViewById(R.id.toolbar_progress).setVisibility(View.INVISIBLE);
+                Log.d(TAG, "DONE");
+                if(nada == null) {
+                    Snackbar snackbar = Snackbar
+                            .make(findViewById(R.id.main_coord_layout), getResources().getString(R.string.error), Snackbar.LENGTH_LONG);
+                    snackbar.show();
+                } else {
+                    Snackbar snackbar = Snackbar
+                            .make(findViewById(R.id.main_coord_layout), getResources().getString(R.string.load_success), Snackbar.LENGTH_LONG);
+                    snackbar.show();
+                }
+            }
+            @Override
+            protected void onPreExecute() {
+                findViewById(R.id.toolbar_progress).setVisibility(View.VISIBLE);
+            }
+        }.execute();
+    }
+
+    byte[] serializableToByte(Object obj) {
+        // serialize the object
+        try {
+            ByteArrayOutputStream bo = new ByteArrayOutputStream();
+            ObjectOutputStream so = new ObjectOutputStream(bo);
+            so.writeObject(obj);
+            so.flush();
+            return bo.toByteArray();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        return null;
+    }
+
+    Object bytesToSerializable(byte[] b ) {
+        // deserialize the object
+        try {
+            ByteArrayInputStream bi = new ByteArrayInputStream(b);
+            ObjectInputStream si = new ObjectInputStream(bi);
+            return  (Object) si.readObject();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        return null;
+    }
+    /*
     @Override
     public void onConnectionFailed(ConnectionResult result) {
         // The failure has a resolution. Resolve it.
@@ -501,21 +937,9 @@ public class MainNavigationDrawer extends AppCompatActivity
     }
 */
     public boolean isGroup() {
-        return the_obj.getClass().equals(Group.class);
-    }
-
-    public void update() {
-        if (isLoggedIn()) {
-                new UpdateFiles(this, the_obj).execute();
-        }
-        else {
-            new AlertDialog.Builder(this)
-                    .setTitle(getResources().getString(R.string.error))
-                    .setMessage(getResources().getString(R.string.relogin))
-                    .setPositiveButton(android.R.string.ok, null) // dismisses by default
-                    .create()
-                    .show();
-        }
+        if(the_obj != null)
+            return the_obj.getClass().equals(Group.class);
+        return false;
     }
 
     public boolean isOnline()

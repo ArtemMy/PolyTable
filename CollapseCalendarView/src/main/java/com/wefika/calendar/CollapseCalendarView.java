@@ -26,10 +26,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
 import org.joda.time.LocalDate;
+import org.joda.time.Months;
 import org.joda.time.Weeks;
 
+import java.text.DateFormatSymbols;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Queue;
 
 /**
@@ -213,18 +218,28 @@ public class CollapseCalendarView extends LinearLayout implements View.OnClickLi
 
             mPrev.setEnabled(mManager.hasPrev());
             mNext.setEnabled(mManager.hasNext());
+//            mPrev.setEnabled(true);
+//            mNext.setEnabled(true);
+
+            LocalDate s;
+            if (mManager.getState() == CalendarManager.State.MONTH) {
+                s = ((Month) mManager.getUnits()).getWeeks().get(1).getDays().get(1).getDate();
+            } else {
+                s = ((Week) mManager.getUnits()).getDays().get(0).getDate();
+            }
 
             DateTime t;
-            if(LocalDate.now().getMonthOfYear() > 8)
-                t = new DateTime(DateTime.now().getYear(), 9, 1, 1, 1);
+            if(s.getMonthOfYear() > 8)
+                t = new DateTime(s.getYear(), 9, 1, 1, 1);
             else
-                t = new DateTime(DateTime.now().getYear(), 2, 1, 1, 1);
-
-            mTitleView.setText(String.valueOf(Weeks.weeksBetween(t.toLocalDate(), getSelectedDate()).getWeeks()) + " " + getResources().getString(R.string.week));
+                t = new DateTime(s.getYear(), 2, 1, 1, 1);
 
             if (mManager.getState() == CalendarManager.State.MONTH) {
+//                mTitleView.setText(new DateFormatSymbols().getMonths()[s.getMonthOfYear() - 1]);
+                mTitleView.setText(getResources().getStringArray(R.array.month_array)[s.getMonthOfYear() - 1]);
                 populateMonthLayout((Month) mManager.getUnits());
             } else {
+                mTitleView.setText(String.valueOf(Weeks.weeksBetween(t.toLocalDate(), s).getWeeks() + 1) + " " + getResources().getString(R.string.week));
                 populateWeekLayout((Week) mManager.getUnits());
             }
         }

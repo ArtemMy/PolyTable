@@ -55,13 +55,13 @@ public class DayTableAdapter extends RecyclerView.Adapter<DayTableAdapter.MyView
                         break;
                     case R.id.card_view:
                         if(isMy) {
-                            DetailedClassFragment mFragment = DetailedClassFragment.newInstance(lesson.parent);
+                            MyDetailedClassFragment mFragment = MyDetailedClassFragment.newInstance(lesson.parent);
                             MainNavigationDrawer mainActivity = (MainNavigationDrawer) v.getContext();
                             Log.d("init", v.getContext().toString());
                             mainActivity.switchContent(mFragment);
                         }
                         else {
-                            MyDetailedClassFragment mFragment = MyDetailedClassFragment.newInstance(lesson.parent);
+                            DetailedClassFragment mFragment = DetailedClassFragment.newInstance(lesson.parent);
                             MainNavigationDrawer mainActivity = (MainNavigationDrawer)v.getContext();
                             Log.d("init", v.getContext().toString());
                             mainActivity.switchContent(mFragment);

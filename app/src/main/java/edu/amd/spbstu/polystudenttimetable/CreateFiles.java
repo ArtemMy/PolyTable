@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.drive.Drive;
 import com.google.android.gms.drive.DriveApi;
@@ -20,7 +22,10 @@ import com.google.android.gms.drive.DriveFile;
 import com.google.android.gms.drive.DriveFolder;
 import com.google.android.gms.drive.DriveId;
 import com.google.android.gms.drive.DriveResource;
+import com.google.android.gms.drive.ExecutionOptions;
 import com.google.android.gms.drive.MetadataChangeSet;
+import com.google.android.gms.drive.events.ChangeEvent;
+import com.google.android.gms.drive.events.ChangeListener;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -39,7 +44,8 @@ public class CreateFiles extends AsyncTask<Void, Void, Boolean> {
     SharedPreferences mPref;
     private static final String TAG = "polytable_log";
     static final String PREF_FILE_ID = "poly_table_file_id";
-    static final String PREF_GROUP= "poly_table_is_group";
+    private static final int REQUEST_CODE_RESOLUTION = 3;
+    static final String PREF_GROUP = "poly_table_is_group";
     private Activity ctx;
     private ProgressDialog pb;
 
@@ -47,6 +53,7 @@ public class CreateFiles extends AsyncTask<Void, Void, Boolean> {
         GoogleApiClient.Builder builder = new GoogleApiClient.Builder(context)
                 .addApi(Drive.API)
                 .addScope(Drive.SCOPE_FILE);
+
         mClient = builder.build();
         this.obj = obj;
         ctx = context;
@@ -56,7 +63,7 @@ public class CreateFiles extends AsyncTask<Void, Void, Boolean> {
 
     @Override
     protected final Boolean doInBackground(Void... v) {
-        Log.d("TAG", "in background");
+        Log.d(TAG, "in background");
         final CountDownLatch latch = new CountDownLatch(1);
         mClient.registerConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
             @Override
@@ -70,8 +77,18 @@ public class CreateFiles extends AsyncTask<Void, Void, Boolean> {
         });
         mClient.registerConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
             @Override
-            public void onConnectionFailed(ConnectionResult arg0) {
-                latch.countDown();
+            public void onConnectionFailed(ConnectionResult result) {
+                if (!result.hasResolution()) {
+                    // show the localized error dialog.
+                    GoogleApiAvailability.getInstance().getErrorDialog(ctx, result.getErrorCode(), 0).show();
+                    latch.countDown();
+                    return;
+                }
+                try {
+                    result.startResolutionForResult(ctx, REQUEST_CODE_RESOLUTION);
+                } catch (IntentSender.SendIntentException e) {
+                    Log.e(TAG, "Exception while starting resolution activity", e);
+                }
             }
         });
         mClient.connect();
@@ -81,7 +98,7 @@ public class CreateFiles extends AsyncTask<Void, Void, Boolean> {
             return null;
         }
         if (!mClient.isConnected()) {
-            return null;
+            return false;
         }
         try {
             return doInBackgroundConnected();
@@ -94,8 +111,9 @@ public class CreateFiles extends AsyncTask<Void, Void, Boolean> {
 
         MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
                 .setTitle("PolyStudent_TimeTable_Data").build();
-        DriveFolder.DriveFolderResult folderResult = Drive.DriveApi.getRootFolder(getGoogleApiClient()).createFolder(
-                getGoogleApiClient(), changeSet).await();
+        DriveFolder folderResult = Drive.DriveApi.getRootFolder(getGoogleApiClient()).createFolder(
+                getGoogleApiClient(), changeSet).await().getDriveFolder();
+
         ArrayList<Lesson> _listLessons;
         ArrayList<String> _listLessonsId;
         if (obj.getClass().equals(Group.class)) {
@@ -125,7 +143,7 @@ public class CreateFiles extends AsyncTask<Void, Void, Boolean> {
                 MetadataChangeSet originalMetadata = new MetadataChangeSet.Builder()
                         .setTitle(String.valueOf(_listLessons.get(i).hashCode()) + ".data").build();
 
-                DriveFolder.DriveFileResult fileResult = folderResult.getDriveFolder().createFile(
+                DriveFolder.DriveFileResult fileResult = folderResult.createFile(
                         getGoogleApiClient(), originalMetadata, originalContents).await();
                 if (!fileResult.getStatus().isSuccess()) {
                     Log.d(TAG, "!fileResult.getStatus().isSuccess()");
@@ -141,11 +159,35 @@ public class CreateFiles extends AsyncTask<Void, Void, Boolean> {
                     Log.d(TAG, "!metadataResult.getStatus().isSuccess()");
                     return false;
                 }
+                if (!metadataResult.getMetadata().isPinnable()) {
+                    Log.d(TAG, "not pinnable");
+                    return false;
+                }
+                if (metadataResult.getMetadata().isPinned()) {
+                    Log.d(TAG, "pinned");
+                    return false;
+                }
+                DriveFile file = metadataResult.getMetadata().getDriveId().asDriveFile();
+                MetadataChangeSet chSet = new MetadataChangeSet.Builder()
+                        .setPinned(true)
+                        .build();
+
+                file.updateMetadata(getGoogleApiClient(), chSet);
+                file.addChangeSubscription(mClient);
+                /*
+                file.addChangeListener(mClient, new ChangeListener() {
+                    @Override
+                    public void onChange(ChangeEvent changeEvent) {
+                        Log.d(TAG, "event!!!!");
+                        ((MainNavigationDrawer) ctx).update();
+                    }
+                });
+                */
+
                 _listLessons.get(i).driveFileId = metadataResult.getMetadata().getDriveId().encodeToString();
                 _listLessonsId.add(metadataResult.getMetadata().getDriveId().encodeToString());
                 Log.d(TAG, "created №" + String.valueOf(i));
             }
-
             Log.d(TAG, "creating general");
             // now the general file
             DriveApi.DriveContentsResult driveContentsResult =
@@ -168,10 +210,14 @@ public class CreateFiles extends AsyncTask<Void, Void, Boolean> {
                 id = ((Group)obj).m_info.m_id;
             else
                 id = ((Lecturer)obj).m_info.m_id;
+
             MetadataChangeSet originalMetadata = new MetadataChangeSet.Builder()
                     .setTitle(String.valueOf(id) + ".data").build();
-            DriveFolder.DriveFileResult fileResult = folderResult.getDriveFolder().createFile(
-                    getGoogleApiClient(), originalMetadata, originalContents).await();
+            DriveFolder.DriveFileResult fileResult = folderResult.createFile(
+                    getGoogleApiClient(), originalMetadata, originalContents, new ExecutionOptions.Builder()
+                            .setNotifyOnCompletion(true)
+                            .build()).await();
+
             if (!fileResult.getStatus().isSuccess())
                 return false;
             metadataResult = fileResult.getDriveFile()
@@ -181,8 +227,29 @@ public class CreateFiles extends AsyncTask<Void, Void, Boolean> {
                 // We failed, stop the task and return.
                 return false;
             }
+            if (!metadataResult.getMetadata().isPinnable()) {
+                Log.d(TAG, "not pinnable");
+                return false;
+            }
+            if (metadataResult.getMetadata().isPinned()) {
+                Log.d(TAG, "pinned");
+                return false;
+            }
+            DriveFile file = metadataResult.getMetadata().getDriveId().asDriveFile();
+            MetadataChangeSet chSet = new MetadataChangeSet.Builder()
+                    .setPinned(true)
+                    .build();
 
-            metadataResult.getMetadata().getDriveId().getResourceId();
+            file.updateMetadata(getGoogleApiClient(), chSet);
+            file.addChangeSubscription(mClient);
+            file.addChangeListener(mClient, new ChangeListener() {
+                @Override
+                public void onChange(ChangeEvent changeEvent) {
+                    Log.d(TAG, "event!!!!");
+                    ((MainNavigationDrawer) ctx).update();
+                }
+            });
+
             Log.d(TAG, "created general");
             SharedPreferences.Editor editor = mPref.edit();
             editor.putString(PREF_FILE_ID, metadataResult.getMetadata().getDriveId().encodeToString());
@@ -213,6 +280,7 @@ public class CreateFiles extends AsyncTask<Void, Void, Boolean> {
             ((MainNavigationDrawer) ctx).the_obj = obj;
         }
         ((MainNavigationDrawer) ctx).switchContent(new MyTimeTableFragment());
+        ((MainNavigationDrawer) ctx).update();
 
         // The creation succeeded, show a message.
     }

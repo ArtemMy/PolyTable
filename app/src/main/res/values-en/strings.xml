@@ -2,6 +2,7 @@
     <string name="app_name">PolyStudent Timetable</string>
     <string name="action_settings">Settings</string>
     <string name="str_depth">Applied Math Department</string>
+    <string name="str_institite">Institute of Applied Mathematics and Mechanics</string>
     <string name="str_university1">St.Petersburg State</string>
     <string name="str_university2">Polytechnical University</string>
     <string name="str_toweb">To web site</string>
@@ -14,14 +15,28 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
-    <string name="header_text1">days till end of term</string>
-    <string name="header_text234">days till end of term</string>
-    <string name="header_text56789">days till end of term</string>
+    <string name="not_set">Not set</string>
+
+    <string name="header_1text1">days till the end of term</string>
+    <string name="header_1text234">days till the end of term</string>
+    <string name="header_1text56789">days till the end of term</string>
+
+    <string name="header_2text1">days till the start of exams</string>
+    <string name="header_2text234">days till the start of exams</string>
+    <string name="header_2text56789">days till the start of exams</string>
+
+    <string name="wrong_data">Wrong data</string>
+    <string name="load_success">Successfully loaded data</string>
+    <string name="share_success">Successfully shared data</string>
 
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
     <string name="placeholder_downloading">Downloading..</string>
     <string name="placeholder_saving">Saving..</string>
+
+    <string name="upcoming">Upcoming</string>
+    <string name="today">Today</string>
+    <string name="tommorow">Tommorow</string>
 
     <string name="placeholder_turn_on_internet">Turn on the internet</string>
 
@@ -30,9 +45,9 @@
     <string name="lecturer">Lecturer</string>
 
     <string name="newn.str">New lesson</string>
-    <string name="newn.type.str">Lesson type</string>
-    <string name="newn.day.str">Day of the week</string>
-    <string name="newn.odd.str">Odd</string>
+    <string name="newn.type.str">Choose lesson type</string>
+    <string name="newn.day.str">Choose day of the week</string>
+    <string name="newn.odd.str">Choose odd</string>
     <string name="newn.start.str">Start time</string>
     <string name="newn.end.str">End time</string>
     <string name="newn.room.str">Room number</string>
@@ -99,11 +114,16 @@
     <string name="search_recent_title">Recent:</string>
     <string name="error_title">Error</string>
 
-    <string name="try_again">Try again later or relogin</string>
+    <string name="choose_group">Choose your group</string>
+    <string name="choose_lectname">Choose your name</string>
+
+    <string name="try_again">Try again later</string>
 
     <string name="search">Search</string>
-    <string name="login">Login</string>
+    <string name="login">Communicate</string>
     <string name="about">About</string>
+    <string name="help">Help</string>
+
 
     <string name="btn_cancel">Cancel</string>
     <string name="btn_ok">Ok</string>
@@ -114,6 +134,8 @@
     <string name="importnant">Mark as important</string>
     <string name="homework">Homework</string>
     <string name="homework_list_empty">No homework yet</string>
+
+    <string name="email">Input email address</string>
 
     <style name="ExpandedAppBar" parent="@android:style/TextAppearance.Medium">
         <item name="android:textSize">28sp</item>
@@ -133,18 +155,34 @@
         <item name="android:textStyle">bold</item>
     </style>
 
-    <string name="connect_email">Logged in</string>
+    <string name="newn_wrn_bld">Please, write valid building name</string>
+    <string name="newn_wrn_room">Please, write valid room number</string>
+    <string name="newn_wrn_time">Please, write valid time</string>
+
+    <string name="connect_email">Logged in as</string>
     <string name="connect_fail">Could not log in</string>
     <string name="groups">Groups</string>
     <string name="lect">Lecturers</string>
 
-    <string name="btn_login_choose">Open shared (group)</string>
-    <string name="btn_logout">Log out</string>
-    <string name="btn_login_create">Create new</string>
+    <string name="btn_login_choose_gr">Load shared group</string>
+    <string name="btn_login_choose_les">Load shared lesson</string>
+    <string name="btn_login_share_gr">Share group</string>
+    <string name="btn_login_share_les">Share lesson</string>
+
+    <string name="btn_logout">Delete timetable</string>
+    <string name="btn_login_create">Create new timetable</string>
 
     <style name="CollapsedAppBarPlus1" parent="@android:style/TextAppearance.Medium">
         <item name="android:textSize">24.5sp</item>
         <item name="android:textColor">@color/white</item>
         <item name="android:textStyle">normal</item>
     </style>
+
+    <string-array name="help_titles">
+        <item>Help screen 1</item>
+    </string-array>
+    <string-array name="help_texts">
+        <item>Help screen 1 text</item>
+    </string-array>
+
 </resources>

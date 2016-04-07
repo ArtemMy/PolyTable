@@ -35,6 +35,7 @@ public class StaticStorage implements Serializable
 
     public static ArrayList<GroupInfo>  m_primatGroups = new ArrayList<GroupInfo>();
     public static ArrayList<String>     m_primatGroupsName = new ArrayList<String>();
+    public static ArrayList<String>     m_primatLectName = new ArrayList<String>();
 
     public StaticStorage()
     {
@@ -48,6 +49,7 @@ public class StaticStorage implements Serializable
         m_listLecturers.clear();
         m_primatGroups.clear();
         m_primatGroupsName.clear();
+        m_primatLectName.clear();
     }
 
 }

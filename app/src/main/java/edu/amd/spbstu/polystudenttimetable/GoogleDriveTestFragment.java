@@ -231,11 +231,11 @@ implements GoogleApiClient.ConnectionCallbacks,
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+        // Inflate the help for this fragment
 //        if(view == null)
         Log.d(TAG, "login fragment onCreateView");
         if(mView == null)
-            mView = inflater.inflate(R.layout.fragment_google_drive_test, container, false);
+            mView = inflater.inflate(R.help.fragment_google_drive_test, container, false);
         Button btn = (Button)mView.findViewById(R.id.login_button);
         btn.setOnClickListener(this);
         btn = (Button)mView.findViewById(R.id.logout_button);

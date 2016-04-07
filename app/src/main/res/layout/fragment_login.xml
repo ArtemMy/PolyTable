@@ -9,6 +9,13 @@
     android:layout_marginTop="20dp"
     android:orientation="vertical">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/loggedas"
+        android:layout_gravity="center_horizontal" />
+
     <Button
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
@@ -16,31 +23,100 @@
         android:text="@string/btn_login_create"
         android:layout_marginBottom="20dp"
         android:layout_marginTop="20dp"
-        android:layout_margin="10dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
         android:background="#8bc34a"
         android:id="@+id/login_create_button"
         android:layout_gravity="center_horizontal" />
-    <Button
-        android:layout_width="fill_parent"
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:id="@+id/login_layout_choose" >
+            <Button
+                android:layout_width="0dp"
+                android:layout_weight="0.5"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginRight="10dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:background="@color/yellow"
+                android:textAppearance="?android:attr/textAppearanceButton"
+                android:text="@string/btn_login_choose_gr"
+                android:layout_alignParentLeft="true"
+                android:layout_alignRight="@+id/login_choose_les"
+                android:layout_margin="10dp"
+                android:id="@+id/login_choose_gr"
+                android:layout_gravity="center_horizontal" />
+            <Button
+                android:layout_width="0dp"
+                android:layout_weight="0.5"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginLeft="10dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:background="@color/yellow"
+                android:textAppearance="?android:attr/textAppearanceButton"
+                android:text="@string/btn_login_choose_les"
+                android:layout_alignParentRight="true"
+                android:layout_margin="10dp"
+                android:id="@+id/login_choose_les"
+                android:layout_gravity="center_horizontal" />
+        </LinearLayout>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
-        android:layout_marginTop="20dp"
-        android:background="#8bc34a"
-        android:textAppearance="?android:attr/textAppearanceButton"
-        android:text="@string/btn_login_choose"
-        android:layout_margin="10dp"
-        android:id="@+id/login_choose_button"
-        android:layout_gravity="center_horizontal" />
+        android:orientation="horizontal"
+        android:id="@+id/login_layout_share" >
+        <Button
+            android:layout_width="0dp"
+            android:layout_weight="0.5"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginRight="10dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:background="@color/yellow"
+            android:textAppearance="?android:attr/textAppearanceButton"
+            android:text="@string/btn_login_share_gr"
+            android:layout_alignParentLeft="true"
+            android:layout_alignRight="@+id/login_choose_les"
+            android:layout_margin="10dp"
+            android:id="@+id/login_share_gr"
+            android:layout_gravity="center_horizontal" />
+        <Button
+            android:layout_width="0dp"
+            android:layout_weight="0.5"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginLeft="10dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:background="@color/yellow"
+            android:textAppearance="?android:attr/textAppearanceButton"
+            android:text="@string/btn_login_share_les"
+            android:layout_alignParentRight="true"
+            android:layout_margin="10dp"
+            android:id="@+id/login_share_les"
+            android:layout_gravity="center_horizontal" />
+    </LinearLayout>
+
     <Button
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:paddingTop="20dp"
         android:paddingBottom="20dp"
-        android:background="#ff5722"
+        android:background="#ff7762"
         android:textAppearance="?android:attr/textAppearanceButton"
         android:textStyle="bold"
-        android:textColor="#FFFFFF"
         android:text="@string/btn_logout"
         android:layout_margin="10dp"
         android:id="@+id/logout_button"

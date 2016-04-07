@@ -129,7 +129,8 @@ public class ServerGetGroups extends AsyncTask<Faculty, String, String>
             GroupInfo grp = listGroups.get(i);
             StaticStorage.m_listGroups.add(grp);
             m_adapterGroups.add(grp.m_name);
-            if(grp.m_spec.contains("Прикладная математика")) {
+            if(grp.m_name.contains("3601/")) {
+//            if(grp.m_spec.contains("Прикладная математика")) {
                 StaticStorage.m_primatGroups.add(grp);
                 StaticStorage.m_primatGroupsName.add(grp.m_name);
             }

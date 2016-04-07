@@ -1,7 +1,7 @@
 package edu.amd.spbstu.polystudenttimetable;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v13.app.FragmentPagerAdapter;
@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * Created by artem on 2/23/16.
  */
-public class SearchTabFragment extends Fragment {
+public class SearchTabFragment extends android.support.v4.app.Fragment {
 
     private TabLayout tabLayout;
     private ViewPager viewPager;
@@ -39,7 +39,7 @@ public class SearchTabFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+        // Inflate the help for this fragment
         if(mRootView == null)
             mRootView = inflater.inflate(R.layout.tab_search, container, false);
 
@@ -52,7 +52,13 @@ public class SearchTabFragment extends Fragment {
 
         viewPager = (ViewPager) mRootView.findViewById(R.id.viewpager);
         viewPager.removeAllViews();
-        adapter = new ViewPagerAdapter(getChildFragmentManager());
+
+        int currentapiVersion = android.os.Build.VERSION.SDK_INT;
+//        if (currentapiVersion >= 17){
+            adapter = new ViewPagerAdapter(getChildFragmentManager());
+//        } else{
+//            adapter = new ViewPagerAdapter(getFragmentManager());
+//        }
         Log.d("TAG", String.valueOf(adapter.getCount()));
 
         if(mGroupFrag == null)
@@ -88,11 +94,11 @@ public class SearchTabFragment extends Fragment {
         return mRootView;
 
     }
-    class ViewPagerAdapter extends FragmentPagerAdapter {
+    class ViewPagerAdapter extends android.support.v4.app.FragmentPagerAdapter {
         private final List<Fragment> mFragmentList = new ArrayList<>();
         private final List<String> mFragmentTitleList = new ArrayList<>();
 
-        public ViewPagerAdapter(FragmentManager manager) {
+        public ViewPagerAdapter(android.support.v4.app.FragmentManager manager) {
             super(manager);
         }
 
@@ -106,8 +112,8 @@ public class SearchTabFragment extends Fragment {
             return mFragmentList.size();
         }
 
-        public void addFragment(android.app.Fragment fragment, String title) {
-            mFragmentList.add((Fragment)fragment);
+        public void addFragment(android.support.v4.app.Fragment fragment, String title) {
+            mFragmentList.add(fragment);
             mFragmentTitleList.add(title);
         }
 
