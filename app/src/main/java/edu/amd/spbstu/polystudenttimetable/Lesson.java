@@ -1,46 +1,37 @@
 package edu.amd.spbstu.polystudenttimetable;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
-import com.google.android.gms.drive.Drive;
-import com.google.android.gms.drive.DriveId;
-import com.wefika.calendar.manager.Week;
-
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Lesson implements Serializable
-{
-    public Map<Integer, List<RegLessonInstance> > m_reg;
+public class Lesson implements Serializable {
+    public Map<Integer, List<RegLessonInstance>> m_reg;
 
-    public List<GroupInfo>  m_list_groups;
-    public String       m_subject;
+    public List<GroupInfo> m_list_groups;
+    public String m_subject;
     public LecturerInfo m_teacher;
-    public String       driveFileId;
+    public String driveFileId;
 
-    public Lesson()
-    {
-        m_subject       = "";
-        m_teacher    = new LecturerInfo();
-        m_reg = new HashMap<Integer, List<RegLessonInstance> >();
+    public Lesson() {
+        m_subject = "";
+        m_teacher = new LecturerInfo();
+        m_reg = new HashMap<Integer, List<RegLessonInstance>>();
         m_list_groups = new ArrayList<GroupInfo>();
         driveFileId = null;
     }
 
     @Override
-    public boolean equals(Object sl){
-        return (m_subject.equals(((Lesson)sl).m_subject) && m_teacher.m_fio.equals(((Lesson)sl).m_teacher.m_fio));
+    public boolean equals(Object sl) {
+        return (m_subject.equals(((Lesson) sl).m_subject) && m_teacher.m_fio.equals(((Lesson) sl).m_teacher.m_fio));
     }
+
     @Override
     public int hashCode() {
         return (this.m_subject + this.m_teacher.m_fio).hashCode();
     }
+
     public void add(int d, int lessonType, String strTimeStart, String strTimeEnd, String strRoomName, String strBldName) {
         RegLessonInstance reg = new RegLessonInstance(this);
         reg.m_day = d;
@@ -49,8 +40,8 @@ public class Lesson implements Serializable
         reg.m_timeEnd = strTimeEnd;
         reg.m_roomName = strRoomName;
         reg.m_buildingName = strBldName;
-        List <RegLessonInstance> l;
-        if(m_reg.containsKey(d))
+        List<RegLessonInstance> l;
+        if (m_reg.containsKey(d))
             l = m_reg.get(d);
         else
             l = new ArrayList<RegLessonInstance>();
@@ -61,6 +52,7 @@ public class Lesson implements Serializable
     public List<RegLessonInstance> getLessonInstances(Integer dayOfWeek) {
         return m_reg.get(dayOfWeek);
     }
+
     public List<RegLessonInstance> getAllLessonInstances() {
         List<RegLessonInstance> res = new ArrayList<>();
         for (List<RegLessonInstance> list : m_reg.values()) {

@@ -57,7 +57,7 @@ final class REST { private REST() {}
             if (email != null) {
                 mConnCBs = (ConnectCBs)act;
                 mGOOSvc = new Drive.Builder(AndroidHttp.newCompatibleTransport(), new GsonFactory(),
-                        GoogleAccountCredential.usingOAuth2(UT.acx, Collections.singletonList(DriveScopes.DRIVE_FILE))
+                        GoogleAccountCredential.usingOAuth2(UT.acx, Collections.singletonList(DriveScopes.DRIVE))
                                 .setSelectedAccountName(email)
                 ).build();
                 return true;

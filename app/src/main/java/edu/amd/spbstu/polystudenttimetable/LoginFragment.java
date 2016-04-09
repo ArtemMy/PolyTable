@@ -262,6 +262,16 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
 
                                 new AsyncTask<Void, String, Boolean>() {
                                     @Override
+                                    protected void onPreExecute() {
+                                        getActivity().findViewById(R.id.toolbar_progress).setVisibility(View.VISIBLE);
+                                    }
+                                    @Override
+                                    protected void onPostExecute(Boolean nada) {
+                                        super.onPostExecute(nada);
+                                        getActivity().findViewById(R.id.toolbar_progress).setVisibility(View.INVISIBLE);
+                                        ((MainNavigationDrawer) getActivity()).write();
+                                    }
+                                    @Override
                                     protected Boolean doInBackground(Void... params) {
                                         String s = REST.query(fileCode);
                                         if (s == null)
@@ -270,7 +280,6 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
                                                 ((Group) ((MainNavigationDrawer) getActivity()).the_obj).m_info.m_listLessonsId :
                                                 ((Lecturer) ((MainNavigationDrawer) getActivity()).the_obj).m_info.m_listLessonsId;
                                         l.set(which, s);
-                                        ((MainNavigationDrawer) getActivity()).update();
                                         return true;
                                     }
                                 }.execute();
@@ -316,43 +325,72 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
                 builder.setAdapter(modeAdapter2,
                         new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Lesson les = lis1.get(which);
-                                final String fileCode = les.driveFileId;
-                                Log.d(TAG, fileCode);
-                                new AsyncTask<Void, String, Boolean>() {
-                                    @Override
-                                    protected Boolean doInBackground(Void... params) {
+                            public void onClick(DialogInterface dialog, final int which) {
+                                AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
+                                final EditText edittext = new EditText(getActivity());
 
-                                        JsonBatchCallback<Permission> callback = new JsonBatchCallback<Permission>() {
+                                edittext.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+                                alert.setTitle(R.string.email);
+
+                                alert.setView(edittext);
+                                alert.setPositiveButton(R.string.btn_ok, new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int whichButton) {
+
+                                        emailStr = edittext.getText().toString();
+                                        Lesson les = lis1.get(which);
+                                        final String fileCode = les.driveFileId;
+                                        Log.d(TAG, fileCode);
+                                        new AsyncTask<Void, String, Boolean>() {
                                             @Override
-                                            public void onFailure(GoogleJsonError e,
-                                                                  HttpHeaders responseHeaders)
-                                                    throws IOException {
-                                                // Handle error
-                                                Snackbar snackbar = Snackbar
-                                                        .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.error), Snackbar.LENGTH_LONG);
-                                                snackbar.show();
-                                                Log.d(TAG, e.getMessage());
+                                            protected void onPreExecute() {
+                                                getActivity().findViewById(R.id.toolbar_progress).setVisibility(View.VISIBLE);
                                             }
 
                                             @Override
-                                            public void onSuccess(Permission permission,
-                                                                  HttpHeaders responseHeaders)
-                                                    throws IOException {
-                                                Snackbar snackbar = Snackbar
-                                                        .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.share_success), Snackbar.LENGTH_LONG);
-                                                snackbar.show();
-                                                Log.d(TAG, "Permission ID: " + permission.getRole());
+                                            protected void onPostExecute(Boolean nada) {
+                                                super.onPostExecute(nada);
+                                                getActivity().findViewById(R.id.toolbar_progress).setVisibility(View.INVISIBLE);
                                             }
-                                        };
-                                        if(!REST.share(fileCode, emailStr, callback))
-                                            return false;
-                                        return true;
+
+                                            @Override
+                                            protected Boolean doInBackground(Void... params) {
+
+                                                JsonBatchCallback<Permission> callback = new JsonBatchCallback<Permission>() {
+                                                    @Override
+                                                    public void onFailure(GoogleJsonError e,
+                                                                          HttpHeaders responseHeaders)
+                                                            throws IOException {
+                                                        // Handle error
+                                                        Snackbar snackbar = Snackbar
+                                                                .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.error), Snackbar.LENGTH_LONG);
+                                                        snackbar.show();
+                                                        Log.d(TAG, e.getMessage());
+                                                    }
+
+                                                    @Override
+                                                    public void onSuccess(Permission permission,
+                                                                          HttpHeaders responseHeaders)
+                                                            throws IOException {
+                                                        Snackbar snackbar = Snackbar
+                                                                .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.share_success), Snackbar.LENGTH_LONG);
+                                                        snackbar.show();
+                                                        Log.d(TAG, "Permission ID: " + permission.getRole());
+                                                    }
+                                                };
+                                                if (!REST.share(fileCode, emailStr, callback))
+                                                    return false;
+                                                return true;
+                                            }
+                                        }.execute();
                                     }
-                                }.execute();
+                                });
+                                alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int whichButton) {
+                                        // what ever you want to do with No option.
+                                    }
+                                });
 
-//                                refreshResults(false);
+                                alert.show();
                             }
                         });
                 final Dialog dialog2 = builder.create();
@@ -377,6 +415,17 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
 
                                 new AsyncTask<Void, String, Boolean>() {
                                     @Override
+                                    protected void onPreExecute() {
+                                        getActivity().findViewById(R.id.toolbar_progress).setVisibility(View.VISIBLE);
+                                    }
+                                    @Override
+                                    protected void onPostExecute(Boolean nada) {
+                                        super.onPostExecute(nada);
+                                        ((MainNavigationDrawer) getActivity()).setIsLoggedIn(true);
+                                        getActivity().findViewById(R.id.toolbar_progress).setVisibility(View.INVISIBLE);
+                                        ((MainNavigationDrawer)getActivity()).update();
+                                    }
+                                    @Override
                                     protected Boolean doInBackground(Void... params) {
 
                                         String res = REST.query(fileCode);
@@ -396,10 +445,6 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
                                             editor.putString(PREF_FILE_ID, res);
                                             editor.commit();
                                             Log.d(TAG, "saved");
-                                            ((MainNavigationDrawer) getActivity()).setIsLoggedIn(true);
-
-                                            ((MainNavigationDrawer)getActivity()).update();
-
                                             return true;
                                         }
                                     }
@@ -434,6 +479,15 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
 
                         emailStr = edittext.getText().toString();
                         new AsyncTask<Void, String, Boolean>() {
+                            @Override
+                            protected void onPreExecute() {
+                                getActivity().findViewById(R.id.toolbar_progress).setVisibility(View.VISIBLE);
+                            }
+                            @Override
+                            protected void onPostExecute(Boolean nada) {
+                                super.onPostExecute(nada);
+                                getActivity().findViewById(R.id.toolbar_progress).setVisibility(View.INVISIBLE);
+                            }
                             @Override
                             protected Boolean doInBackground(Void... params) {
 
@@ -574,6 +628,8 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
         btn.setEnabled(false);
         btn = (Button)mView.findViewById(R.id.login_share_gr);
         btn.setEnabled(false);
+        TextView t= ((TextView)mView.findViewById(R.id.loggedas));
+        t.setText(getResources().getString(R.string.connect_fail));
     }
     private void loggedIn()
     {
@@ -590,11 +646,11 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
         btn = (Button)mView.findViewById(R.id.login_share_gr);
         btn.setEnabled(true);
         TextView t= ((TextView)mView.findViewById(R.id.loggedas));
-        if (((MainNavigationDrawer)getActivity()).the_obj != null) {
+        if (((MainNavigationDrawer)getActivity()).the_name != null) {
             if (((MainNavigationDrawer) getActivity()).isGroup())
-                t.setText(getResources().getString(R.string.connect_email) + " " + ((Group) ((MainNavigationDrawer) getActivity()).the_obj).m_info.m_name);
+                t.setText(getResources().getString(R.string.connect_email) + " " + ((MainNavigationDrawer) getActivity()).the_name);
             else
-                t.setText(getResources().getString(R.string.connect_email) + " " + ((Lecturer) ((MainNavigationDrawer) getActivity()).the_obj).m_info.m_fio);
+                t.setText(getResources().getString(R.string.connect_email) + " " + ((MainNavigationDrawer) getActivity()).the_name);
         }
     }
 

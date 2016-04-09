@@ -209,9 +209,12 @@ public class SearchFragment extends android.support.v4.app.Fragment implements V
                         dialog.show();
                     }
                 });
+                if(StaticStorage.m_listGroupsName.isEmpty()) {
+                    if (!((MainNavigationDrawer) getActivity()).isOnline())
+                        ((MainNavigationDrawer) getActivity()).askForInternet();
+                    else startDownloadListFaculties((ArrayAdapter<String>) textView.getAdapter());
+                }
 
-                if (!((MainNavigationDrawer)getActivity()).isOnline()) ((MainNavigationDrawer)getActivity()).askForInternet();
-                else startDownloadListFaculties((ArrayAdapter<String>) textView.getAdapter());
             }
             else {
                 if (!((MainNavigationDrawer)getActivity()).isOnline()) ((MainNavigationDrawer)getActivity()).askForInternet();

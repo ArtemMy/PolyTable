@@ -179,10 +179,21 @@
     </style>
 
     <string-array name="help_titles">
-        <item>Help screen 1</item>
+        <item>Edit class instance</item>
+        <item>Edit class</item>
+        <item>Watch current tasks</item>
+        <item>Guest mode. Search.</item>
+        <item>Communicate. Log in</item>
     </string-array>
     <string-array name="help_texts">
-        <item>Help screen 1 text</item>
+        <item>To edit, hold the activity corresponding to the activity clamped until you get the context menu. There you can edit the hw, mark and cancel the job. View hw task also click on the appropriate icon.</item>
+        <item>To edit the subject, press the red button floating. After editing, you can save your changes by clicking on the green check mark in the same place</item>
+        <item>To view the current setting, select the appropriate menu item. Editing is done by clicking on the desired activity</item>
+        <item>To find the schedule is not required to log in. You can vospolzovatatsya string search and autocompletion list for the Department of Applied Mathematics. Recently viewed schedules below are available in offline mode. The same functionality can be obtained for the teacher producing swipe left</item>
+        <item>In order to use all the functions available to the user sign-in. By choosing to access the menu item sovmestnyy. You can create a new schedule, by default filled in accordance with available on the Polytechnic website.
+
+             You can also connect to an existing schedule for collaborative editing, by clicking on the "Download timetable" button. To do this already connected user (or creator) must "share" with your schedule by clicking on the appropriate button and entering your email address.
+        </item>
     </string-array>
 
 </resources>

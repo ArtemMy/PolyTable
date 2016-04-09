@@ -120,6 +120,7 @@ public class MainNavigationDrawer extends AppCompatActivity
     static final String PREF_FILE_ID = "poly_table_file_id";
     private boolean isLoggedIn;
     public Object the_obj = null;
+    public String the_name = null;
 
     public void onFragmentInteraction(Uri uri)
     {
@@ -578,11 +579,13 @@ public class MainNavigationDrawer extends AppCompatActivity
 
                 if (obj instanceof Group) {
                     titl = String.valueOf(((Group) obj).m_info.m_id);
+                    the_name = ((Group)obj).m_info.m_name;
                     gen = ((Group) obj).m_info;
                     lessons = ((Group) obj).m_listLessons;
                     ids = ((Group)obj).m_info.m_listLessonsId;
                 } else if (obj instanceof Lecturer){
                     titl = String.valueOf(((Lecturer) obj).m_info.m_id);
+                    the_name = ((Lecturer)obj).m_info.m_fio;
                     gen = ((Lecturer)obj).m_info;
                     lessons = ((Lecturer) obj).m_listLessons;
                     ids = ((Lecturer)obj).m_info.m_listLessonsId;
@@ -704,6 +707,62 @@ public class MainNavigationDrawer extends AppCompatActivity
 
         }.execute();
     }
+
+    public void write() {
+        new AsyncTask<Void, String, String>() {
+            ProgressDialog pb;
+            @Override
+            protected String doInBackground(Void... params) {
+                String gid = getSharedPreferences("edu.amd.spbstu.polystudenttimetable", Context.MODE_PRIVATE).getString(PREF_FILE_ID, null);
+                if(gid == null)
+                    Log.d(TAG, "gid == null");
+                if (gid == null)  { return null; }
+
+                Object gen = null;
+                String titl = null;
+                if (the_obj instanceof Group) {
+                    titl = String.valueOf(((Group) the_obj).m_info.m_id);
+                    gen = ((Group) the_obj).m_info;
+                } else if (the_obj instanceof Lecturer) {
+                    titl = String.valueOf(((Lecturer) the_obj).m_info.m_id);
+                    gen = ((Lecturer) the_obj).m_info;
+                }
+
+                File fl = UT.byte2File(serializableToByte(gen), "tmp");
+                return REST.update(gid, titl, UT.MIME_TEXT, null, fl);
+            }
+            @Override
+            protected void onProgressUpdate(String... strings) { super.onProgressUpdate(strings);
+                Log.d(TAG, strings[0]);
+            }
+            @Override
+            protected void onPostExecute(String nada) {
+                super.onPostExecute(nada);
+                Log.d(TAG, "DONE");
+                pb.dismiss();
+                if(nada == null) {
+                    Snackbar snackbar = Snackbar
+                            .make(findViewById(R.id.main_coord_layout), getResources().getString(R.string.error), Snackbar.LENGTH_LONG);
+                    snackbar.show();
+                } else {
+                    LocalPersistence.writeObjectToFile(getApplicationContext(), the_obj, LOCAL_FILE);
+                    Snackbar snackbar = Snackbar
+                            .make(findViewById(R.id.main_coord_layout), getResources().getString(R.string.load_success), Snackbar.LENGTH_LONG);
+                    snackbar.show();
+                    update();
+                }
+            }
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+                Log.d(TAG, "DO");
+                pb = new ProgressDialog(MainNavigationDrawer.this);
+                pb.setMessage(MainNavigationDrawer.this.getResources().getString(R.string.placeholder_saving));
+                pb.show();
+            }
+
+        }.execute();
+    }
 /*
     public void update() {
         if (isLoggedIn()) {
@@ -757,11 +816,13 @@ public class MainNavigationDrawer extends AppCompatActivity
                 if(obj instanceof GroupInfo) {
                     result = new Group();
                     ((Group)result).m_info = (GroupInfo)obj;
+                    the_name = ((GroupInfo)obj).m_name;
                     lessons = ((Group)result).m_listLessons;
                     ids = ((Group)result).m_info.m_listLessonsId;
                 } else if(obj instanceof LecturerInfo) {
                     result = new Lecturer();
                     ((Lecturer)result).m_info = (LecturerInfo)obj;
+                    the_name = ((LecturerInfo)obj).m_fio;
                     lessons = ((Lecturer)result).m_listLessons;
                     ids = ((Lecturer)result).m_info.m_listLessonsId;
                 } else {
