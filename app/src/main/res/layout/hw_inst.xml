@@ -7,16 +7,19 @@
 
     <TextView
         android:id="@+id/hw_lesson"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textStyle="bold"
         android:textSize="18sp"
         android:paddingLeft="25dp" />
 
-    <TextView
+    <EditText
         android:id="@+id/hw_title"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="18sp"
+        android:focusable="false"
+        android:clickable="true"
+        android:background="@android:color/transparent"
         android:paddingLeft="25dp" />
 </LinearLayout>

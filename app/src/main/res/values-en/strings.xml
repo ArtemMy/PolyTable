@@ -159,6 +159,8 @@
     <string name="newn_wrn_room">Please, write valid room number</string>
     <string name="newn_wrn_time">Please, write valid time</string>
 
+    <string name="no_group">Not chosen</string>
+
     <string name="connect_email">Logged in as</string>
     <string name="connect_fail">Could not log in</string>
     <string name="groups">Groups</string>

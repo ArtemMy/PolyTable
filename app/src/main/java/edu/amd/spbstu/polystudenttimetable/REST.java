@@ -44,6 +44,7 @@ final class REST { private REST() {}
     private static Drive mGOOSvc;
     private static ConnectCBs mConnCBs;
     private static boolean mConnected;
+    private static boolean isConnecting = false;
     private static final String TAG = "polytable_log";
 
 
@@ -69,8 +70,9 @@ final class REST { private REST() {}
      * connect
      */
     static void connect() {
-        if (UT.AM.getEmail() != null && mGOOSvc != null) {
+        if (UT.AM.getEmail() != null && mGOOSvc != null && !isConnecting) {
             mConnected = false;
+            isConnecting = true;
             new AsyncTask<Void, Void, Exception>() {
                 @Override
                 protected Exception doInBackground(Void... nadas) {
@@ -84,18 +86,39 @@ final class REST { private REST() {}
                         return gaIOEx;
                     } catch (IOException e) {   // '404 not found' in FILE scope, consider connected
                         if (e instanceof GoogleJsonResponseException) {
-                            if (404 == ((GoogleJsonResponseException) e).getStatusCode())
+                            Log.d(TAG, "GoogleJsonResponseException");
+                            if (404 == ((GoogleJsonResponseException) e).getStatusCode()) {
                                 mConnected = true;
+                            } else {
+                                Log.d(TAG, e.getMessage());
+                            }
+                        } else {
+                            Log.d(TAG, "IOExeption");
+                            if(e == null) {
+                                Log.d(TAG, "e == null");
+                            } else {
+                                Log.d(TAG, e.getMessage());
+                            }
                         }
                     } catch (Exception e) {  // "the name must not be empty" indicates
                         UT.le(e);           // UNREGISTERED / EMPTY account in 'setSelectedAccountName()' above
+                        if(e == null) {
+                            Log.d(TAG, "e == null");
+                        } else {
+                            Log.d(TAG, "unknown ex");
+                            Log.d(TAG, e.getMessage());
+                        }
+                        return e;
                     }
+                    Log.d(TAG, "wtf");
+                    Log.d(TAG, String.valueOf(mConnected));
                     return null;
                 }
 
                 @Override
                 protected void onPostExecute(Exception ex) {
                     super.onPostExecute(ex);
+                    isConnecting = false;
                     if (mConnected) {
                         mConnCBs.onConnOK();
                     } else {  // null indicates general error (fatal)

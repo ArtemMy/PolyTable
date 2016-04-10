@@ -148,7 +148,8 @@ public class MyHomeworkFragment extends Fragment {
                         BulletSpan toRemoveSpans[] = e.getSpans(0, e.length(), BulletSpan.class);
                         for (int i = 0; i < toRemoveSpans.length; i++)
                             e.removeSpan(toRemoveSpans[i]);
-                        String[] lines = TextUtils.split(e.toString(), "\n");
+
+                        String[] lines = TextUtils.split(e.toString(), "\\r?\\n");
                         Log.d(TAG, String.valueOf(lines.length));
                         SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
                         String line = null;
@@ -260,10 +261,16 @@ public class MyHomeworkFragment extends Fragment {
                 convertView = in_inflater.inflate(R.layout.hw_inst, null);
             } else {
             }
-            TextView textChild = (TextView) convertView.findViewById(R.id.hw_title);
+            EditText textChild = (EditText) convertView.findViewById(R.id.hw_title);
 
             Spannable formatedText = new SpannableString(((RegLessonInstance.Homework) getChild(groupPosition, childPosition)).m_task);
-            String[] lines = TextUtils.split(((RegLessonInstance.Homework) getChild(groupPosition, childPosition)).m_task, "\n");
+
+            BulletSpan toRemoveSpans[] = formatedText.getSpans(0, formatedText.length(), BulletSpan.class);
+            for (int i = 0; i < toRemoveSpans.length; i++)
+                formatedText.removeSpan(toRemoveSpans[i]);
+
+            String[] lines = TextUtils.split(formatedText.toString(), "\\r?\\n");
+            Log.d(TAG, String.valueOf(lines.length));
             SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder();
             String line = null;
             for (int index = 0; index < lines.length; ++index) {
@@ -283,8 +290,8 @@ public class MyHomeworkFragment extends Fragment {
             }
             textChild.setText(formatedText);
 
-            textChild = (TextView) convertView.findViewById(R.id.hw_lesson);
-            textChild.setText(((RegLessonInstance.Homework) getChild(groupPosition, childPosition)).m_lesson.parent.m_subject);
+            TextView txtChild = (TextView) convertView.findViewById(R.id.hw_lesson);
+            txtChild.setText(((RegLessonInstance.Homework) getChild(groupPosition, childPosition)).m_lesson.parent.m_subject);
 
             return convertView;
         }

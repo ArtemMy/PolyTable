@@ -529,13 +529,14 @@ public class MainNavigationDrawer extends AppCompatActivity
 
     @Override
     public void onConnFail(Exception ex) {
-        Log.d(TAG, "\n\nCONNECTION FAIL!");
+        Log.d(TAG, "CONNECTION FAIL!");
         if(!isOnline()) {
             update();
             return;
         }
 
         if (ex == null) {                                                         UT.lg("connFail - UNSPECD 1");
+            Log.d(TAG, "here");
             suicide(R.string.try_again);  return;  //---------------------------------->>>
         }
         if (ex instanceof UserRecoverableAuthIOException) {                        UT.lg("connFail - has res");
@@ -544,6 +545,7 @@ public class MainNavigationDrawer extends AppCompatActivity
             if (ex.getMessage() != null) suicide(ex.getMessage());  //--------------------->>>
             else  suicide(R.string.try_again);  //---------------------------------->>>
         } else {                                                                  UT.lg("connFail - UNSPECD 2");
+            Log.d(TAG, ex.getMessage());
             suicide(R.string.try_again);  //---------------------------------->>>
         }
     }

@@ -487,6 +487,15 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
                             protected void onPostExecute(Boolean nada) {
                                 super.onPostExecute(nada);
                                 getActivity().findViewById(R.id.toolbar_progress).setVisibility(View.INVISIBLE);
+                                if(nada) {
+                                    Snackbar snackbar = Snackbar
+                                            .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.share_success), Snackbar.LENGTH_LONG);
+                                    snackbar.show();
+                                } else {
+                                    Snackbar snackbar = Snackbar
+                                            .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.error), Snackbar.LENGTH_LONG);
+                                    snackbar.show();
+                                }
                             }
                             @Override
                             protected Boolean doInBackground(Void... params) {
@@ -497,9 +506,6 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
                                                           HttpHeaders responseHeaders)
                                             throws IOException {
                                         // Handle error
-                                        Snackbar snackbar = Snackbar
-                                                .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.error), Snackbar.LENGTH_LONG);
-                                        snackbar.show();
                                         Log.d(TAG, e.getMessage());
                                     }
 
@@ -511,28 +517,6 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
                                     }
                                 };
 
-                                JsonBatchCallback<Permission> callback = new JsonBatchCallback<Permission>() {
-                                    @Override
-                                    public void onFailure(GoogleJsonError e,
-                                                          HttpHeaders responseHeaders)
-                                            throws IOException {
-                                        // Handle error
-                                        Snackbar snackbar = Snackbar
-                                                .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.error), Snackbar.LENGTH_LONG);
-                                        snackbar.show();
-                                        Log.d(TAG, e.getMessage());
-                                    }
-
-                                    @Override
-                                    public void onSuccess(Permission permission,
-                                                          HttpHeaders responseHeaders)
-                                            throws IOException {
-                                        Snackbar snackbar = Snackbar
-                                                .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.share_success), Snackbar.LENGTH_LONG);
-                                        snackbar.show();
-                                        Log.d(TAG, "Permission ID: " + permission.getRole());
-                                    }
-                                };
                                 if(((MainNavigationDrawer)getActivity()).the_obj == null) {
                                     Snackbar snackbar = Snackbar
                                             .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.not_loaded), Snackbar.LENGTH_LONG);
@@ -542,7 +526,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
                                 SharedPreferences pref = getActivity().getSharedPreferences(
                                         "edu.amd.spbstu.polystudenttimetable", Context.MODE_PRIVATE);
                                 final String FileId = pref.getString(PREF_FILE_ID, "");
-                                if(!REST.share(FileId, emailStr, callback))
+                                if(!REST.share(FileId, emailStr, callback1))
                                     return false;
                                 if(((MainNavigationDrawer)getActivity()).isGroup()) {
                                     for(String FId : ((Group)((MainNavigationDrawer)getActivity()).the_obj).m_info.m_listLessonsId) {
@@ -629,7 +613,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
         btn = (Button)mView.findViewById(R.id.login_share_gr);
         btn.setEnabled(false);
         TextView t= ((TextView)mView.findViewById(R.id.loggedas));
-        t.setText(getResources().getString(R.string.connect_fail));
+        t.setText(getResources().getString(R.string.no_group));
     }
     private void loggedIn()
     {

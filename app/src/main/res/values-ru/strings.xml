@@ -135,6 +135,8 @@
     <string name="groups">Группы</string>
     <string name="lect">Преподаватели</string>
 
+    <string name="no_group">Расписание не выбрано</string>
+
     <string name="connect_email">Вход выполнен, как</string>
     <string name="connect_fail">Вход не выполнен</string>
     <string name="internet_dialog">Нет интернета</string>
