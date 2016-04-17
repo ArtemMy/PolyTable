@@ -124,12 +124,18 @@ public class ServerGetGroups extends AsyncTask<Faculty, String, String>
         int                     i, n;
 
         n = listGroups.size();
+        boolean hasPrimat = false;
         for (i = 0; i < n; i++)
         {
             GroupInfo grp = listGroups.get(i);
             StaticStorage.m_listGroups.add(grp);
             m_adapterGroups.add(grp.m_name);
             if(grp.m_name.contains("3601/")) {
+                if(!hasPrimat) {
+                    StaticStorage.m_primatGroupsName.clear();
+                    StaticStorage.m_primatGroups.clear();
+                }
+                hasPrimat = true;
 //            if(grp.m_spec.contains("Прикладная математика")) {
                 StaticStorage.m_primatGroups.add(grp);
                 StaticStorage.m_primatGroupsName.add(grp.m_name);

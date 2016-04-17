@@ -1,6 +1,7 @@
 package edu.amd.spbstu.polystudenttimetable;
 
 import android.app.AlertDialog;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -19,6 +20,7 @@ import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,6 +31,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
 import com.wefika.calendar.CollapseCalendarView;
 import com.wefika.calendar.manager.CalendarManager;
 import com.wefika.calendar.manager.Month;
@@ -50,6 +53,10 @@ public class MyTimeTableFragment extends Fragment
     View mRootView = null;
     List<RegLessonInstance> mAllClasses;
     LocalDate mDay;
+
+    private static final int MENU_IMP = Menu.FIRST;
+    private static final int MENU_HW = Menu.FIRST + 1;
+    private static final int MENU_CANCEL = Menu.FIRST + 2;
 
     private ArrayList<Lesson> mLessonList;
     private String mTitle;
@@ -139,9 +146,33 @@ public class MyTimeTableFragment extends Fragment
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        MenuInflater inflater = getActivity().getMenuInflater();
-        inflater.inflate(R.menu.class_menu, menu);
+//        MenuInflater inflater = getActivity().getMenuInflater();
+//        inflater.inflate(R.menu.class_menu, menu);
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+
+        final int position = info.position;
+        RegLessonInstance currentLesson;
+        currentLesson = mAllClasses.get(position);
+
+        menu.setHeaderTitle(getResources().getString(R.string.edit_menu));
+
+        String actionString;
+        if (currentLesson.m_isCanceled.containsKey(mDay)) {
+            actionString = getResources().getString(R.string.reset);
+        } else {
+            actionString = getResources().getString(R.string.cancel);
+        }
+        menu.add(0, MENU_CANCEL, Menu.NONE, actionString);
+        if (currentLesson.m_isImportant.containsKey(mDay)) {
+            actionString = getResources().getString(R.string.unimportnant);
+        } else {
+            actionString = getResources().getString(R.string.importnant);
+        }
+        menu.add(0, MENU_IMP, Menu.NONE, actionString);
+
+        actionString = getResources().getString(R.string.homework);
+
+        menu.add(0, MENU_HW, Menu.NONE, actionString);
     }
 
     @Override
@@ -152,7 +183,7 @@ public class MyTimeTableFragment extends Fragment
         RegLessonInstance currentLesson;
         currentLesson = mAllClasses.get(position);
         switch (item.getItemId()) {
-            case R.id.menu_class_cancel:
+            case MENU_CANCEL:
                 Log.d("init", "Cancel class");
                 if(currentLesson.m_isCanceled.containsKey(mDay)) {
                     currentLesson.m_isCanceled.remove(mDay);
@@ -165,7 +196,7 @@ public class MyTimeTableFragment extends Fragment
 //                new WriteFile(getActivity(), currentLesson.parent).execute();
                 ((MainNavigationDrawer)getActivity()).write(currentLesson.parent);
                 return true;
-            case R.id.menu_class_important:
+            case MENU_IMP:
                 Log.d("init", "mImportant");
                 if(currentLesson.m_isImportant.containsKey(mDay)) {
                     currentLesson.m_isImportant.remove(mDay);
@@ -178,9 +209,9 @@ public class MyTimeTableFragment extends Fragment
 //                new WriteFile(getActivity(), currentLesson.parent).execute();
                 ((MainNavigationDrawer)getActivity()).write(currentLesson.parent);
                 return true;
-            case R.id.menu_class_homework:
+            case MENU_HW:
                 Log.d("init", "mHomework");
-                AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
+                final AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
                 final EditText edittext = new EditText(getActivity());
 
 /*
@@ -201,6 +232,11 @@ public class MyTimeTableFragment extends Fragment
                                     Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
                         }
                         */
+                        for(int i = e.length() - 1; i > 0; i--) {
+                            if(e.subSequence(i-1, i).toString().equals("\n") && e.subSequence(i, i + 1).toString().equals("\n"))
+                                e.replace(i, i+1, "");
+                        }
+
                         BulletSpan toRemoveSpans[] = e.getSpans(0, e.length(), BulletSpan.class);
                         for (int i = 0; i < toRemoveSpans.length; i++)
                             e.removeSpan(toRemoveSpans[i]);
@@ -215,10 +251,7 @@ public class MyTimeTableFragment extends Fragment
                             if (index != lines.length - 1) {
                                 spannableStringBuilder.append("\n");
                             }
-                            if (TextUtils.isEmpty(line)) {
-//                                spannableStringBuilder.append("\n");
-                            }
-                            else {
+                            if (!TextUtils.isEmpty(line)) {
                                 e.setSpan(new BulletSpan(30), length, length + 1,
                                         Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
                             }
@@ -239,12 +272,25 @@ public class MyTimeTableFragment extends Fragment
                 alert.setView(edittext);
                 alert.setPositiveButton(R.string.btn_ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
-                        if(mAllClasses.get(position).m_homework.containsKey(mDay))
-                            mAllClasses.get(position).m_homework.get(mDay).m_task = edittext.getText().toString();
-                        else {
-                            RegLessonInstance.Homework hw = mAllClasses.get(position).newHomework();
-                            hw.m_task = edittext.getText().toString();
-                            mAllClasses.get(position).m_homework.put(mDay, hw);
+
+                        if(mAllClasses.get(position).m_homework.containsKey(mDay)) {
+                            if (edittext.getText().toString().isEmpty()) {
+                                mAllClasses.get(position).m_homework.remove(mDay);
+                            } else {
+                                mAllClasses.get(position).m_homework.get(mDay).m_task = edittext.getText().toString();
+                            }
+                        } else {
+                            if (edittext.getText().toString().isEmpty()) {
+                                mAllClasses.get(position).m_homework.remove(mDay);
+                                Snackbar snackbar = Snackbar
+                                        .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.cantdoempty), Snackbar.LENGTH_LONG);
+                                snackbar.show();
+                                return;
+                            } else {
+                                RegLessonInstance.Homework hw = mAllClasses.get(position).newHomework();
+                                hw.m_task = edittext.getText().toString();
+                                mAllClasses.get(position).m_homework.put(mDay, hw);
+                            }
                         }
 
 //                        new WriteFile(getActivity(), mAllClasses.get(position).parent).execute();

@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="color0">#FFFFFF</color>
+    <color name="color1">#FF4081</color>
+    <color name="color2">#009688</color>
+    <color name="color3">#9c27b0</color>
+    <color name="color4">#4caf50</color>
+    <color name="color5">#CDDC39</color>
+
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
@@ -9,4 +16,5 @@
     <color name="grey_icon_tint">#CCCCCC</color>
     <color name="white">#3C3C3C</color>
 
+    <color name="cool_green">#009688</color>
 </resources>

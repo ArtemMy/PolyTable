@@ -1,5 +1,7 @@
 package edu.amd.spbstu.polystudenttimetable;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,11 +9,16 @@ import java.util.List;
 import java.util.Map;
 
 public class Lesson implements Serializable {
+    @SerializedName("Instances of Lesson")
     public Map<Integer, List<RegLessonInstance>> m_reg;
 
+    @SerializedName("List of Groups")
     public List<GroupInfo> m_list_groups;
+    @SerializedName("Subject Name")
     public String m_subject;
+    @SerializedName("Teacher Info")
     public LecturerInfo m_teacher;
+    @SerializedName("Drive Id")
     public String driveFileId;
 
     public Lesson() {

@@ -44,11 +44,25 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior" >
 
         <LinearLayout
-        android:paddingTop="24dp"
-        android:id="@+id/detailed_container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <LinearLayout
+                android:paddingLeft="24dp"
+                android:paddingRight="24dp"
+                android:paddingTop="36dp"
+                android:id="@+id/colors_bar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:orientation="horizontal">
+            </LinearLayout>
+            <LinearLayout
+            android:id="@+id/detailed_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            </LinearLayout>
         </LinearLayout>
     </android.support.v4.widget.NestedScrollView>
 

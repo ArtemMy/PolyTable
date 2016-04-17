@@ -220,6 +220,8 @@ public class DetailedClassFragment extends Fragment {
             GroupInfo tmpGroup = (GroupInfo)mGroupListAdapter.getItem(position);
 
             Log.d("init", tmpGroup.toString());
+            Log.d("init", tmpGroup.m_name);
+            Log.d("init", String.valueOf(tmpGroup.m_id));
             new ServerGetTable(tmpGroup, getActivity()).execute();
         }
 
@@ -228,8 +230,8 @@ public class DetailedClassFragment extends Fragment {
 
         @Override
         public void onClick(View view) {
-        if(mLesson.m_teacher.m_fio != getActivity().getResources().getString(R.string.not_set))
-            new ServerGetTable(mLesson.m_teacher, getActivity()).execute();
+            if(mLesson.m_teacher.m_fio != "Not set" && mLesson.m_teacher.m_fio != "Не задан")
+                new ServerGetTable(mLesson.m_teacher, getActivity()).execute();
         }
 
     };

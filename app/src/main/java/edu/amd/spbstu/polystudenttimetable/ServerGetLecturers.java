@@ -1,7 +1,10 @@
 package edu.amd.spbstu.polystudenttimetable;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
+import android.support.design.widget.NavigationView;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 
@@ -19,6 +22,8 @@ public class ServerGetLecturers extends AsyncTask<String, String, String>
 {
     private ArrayAdapter<String> adapter;
     private Activity mAct;
+    private String mStr;
+    private ProgressDialog pb;
 
     public ServerGetLecturers(ArrayAdapter<String> l)
     {
@@ -32,6 +37,7 @@ public class ServerGetLecturers extends AsyncTask<String, String, String>
     protected String doInBackground(String ... str)
     {
         String strLecturerEnc = "";
+        mStr = str[0];
         try
         {
             strLecturerEnc = URLEncoder.encode(str[0], "UTF-8");
@@ -75,8 +81,10 @@ public class ServerGetLecturers extends AsyncTask<String, String, String>
     }
     protected void onPostExecute(String strResult)
     {
-        if (strResult == null)
+        if (strResult == null) {
+            pb.dismiss();
             return;
+        }
         parseJsonLecturerId(strResult);
     }
     private void parseJsonLecturerId(String strJson)
@@ -84,6 +92,17 @@ public class ServerGetLecturers extends AsyncTask<String, String, String>
         try
         {
             JSONObject objRoot = new JSONObject(strJson);
+            if(!objRoot.has("teachers") || !(objRoot.get("teachers") instanceof JSONArray))
+            {
+                Lecturer lect = new Lecturer();
+                lect.m_info.m_fio = mStr;
+
+                if (((NavigationView) mAct.findViewById(R.id.nav_view)).getMenu().getItem(0).isChecked()) {
+                    ((MainNavigationDrawer)mAct).createTree(lect);
+                } else {
+                    ((MainNavigationDrawer) mAct).switchContent(TimeTableFragment.newInstance(lect));
+                }
+            }
             JSONArray arrTeachers = (JSONArray) objRoot.get("teachers");
             int numLecturers = arrTeachers.length();
             if(adapter != null)
@@ -96,6 +115,7 @@ public class ServerGetLecturers extends AsyncTask<String, String, String>
                     lect.m_chair = (String)arrTeachers.optJSONObject(i).get("chair");
                     lect.m_fio = (String)arrTeachers.optJSONObject(i).get("full_name");
                     lect.m_id = (int)arrTeachers.optJSONObject(i).get("id");
+                    pb.dismiss();
                     if(adapter == null) {
                         new ServerGetTable(lect, mAct).execute();
                         return;
@@ -115,4 +135,19 @@ public class ServerGetLecturers extends AsyncTask<String, String, String>
 
     }
 
+    @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
+        pb = new ProgressDialog(mAct);
+        pb.setMessage(mAct.getResources().getString(R.string.placeholder_downloading));
+
+        pb.setCancelable(true);
+        pb.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                cancel(true);
+            }
+        });
+        pb.show();
+    }
 }

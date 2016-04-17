@@ -36,6 +36,7 @@ public class DayTableListAdapter extends BaseAdapter
     List<RegLessonInstance> list;
     LocalDate week;
     int position;
+    static final String PREF_LES_COL= "poly_table_lesson_color";
     RegLessonInstance currentLesson;
     Activity act;
     LayoutInflater lInflater;
@@ -121,7 +122,10 @@ public class DayTableListAdapter extends BaseAdapter
             else
                 mSubLine.setText("");
         }
-
+        int col = act.getSharedPreferences(act.getPackageName(), Context.MODE_PRIVATE).getInt(PREF_LES_COL+String.valueOf(lesson.parent.hashCode()), 0);
+        mCardView.setCardBackgroundColor(act.getResources().getColor(StaticStorage.lesColor[col]));
+        mCardView.setCardElevation(10);
+        mCardView.setRadius(15);
 
         mCanceled.setVisibility(lesson.m_isCanceled.containsKey(week) ? View.VISIBLE : View.GONE);
         mHomework.setAlpha(lesson.m_homework.containsKey(week) ? 1.0f : 0.15f);

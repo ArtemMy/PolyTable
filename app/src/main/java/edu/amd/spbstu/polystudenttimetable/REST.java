@@ -8,6 +8,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 
 import com.google.android.gms.drive.DriveId;
@@ -30,7 +31,9 @@ import com.google.api.services.drive.model.FileList;
 import com.google.api.services.drive.model.ParentReference;
 import com.google.api.services.drive.model.Permission;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -219,19 +222,35 @@ final class REST { private REST() {}
      * @param resId  file driveId
      * @return       file's content  / null on fail
      */
-    static byte[] read(String resId) {
+    static String read(String resId) {
         Log.d("polytable_log", String.valueOf(mGOOSvc != null));
         Log.d("polytable_log", String.valueOf(mConnected));
         if (mGOOSvc != null && mConnected && resId != null) try {
             File gFl = mGOOSvc.files().get(resId).setFields("downloadUrl").execute();
             if (gFl != null){
                 String strUrl = gFl.getDownloadUrl();
-                return UT.is2Bytes(mGOOSvc.getRequestFactory().buildGetRequest(new GenericUrl(strUrl)).execute().getContent());
+//                return UT.is2Bytes(mGOOSvc.getRequestFactory().buildGetRequest(new GenericUrl(strUrl)).execute().getContent());
+                java.util.Scanner s = new java.util.Scanner(mGOOSvc.getRequestFactory().buildGetRequest(new GenericUrl(strUrl)).execute().getContent()).useDelimiter("\\A");
+                return s.hasNext() ? s.next() : "";
             }
         } catch (Exception e) { UT.le(e); }
         return null;
     }
 
+    static String read() {
+        String s = new String();
+        if (mGOOSvc != null) {
+            s += "-";
+        } else {
+            s += "+";
+        }
+        if (mConnected) {
+            s += "-";
+        } else {
+            s += "+";
+        }
+        return s;
+    }
     /************************************************************************************************
      * share file contents
      */

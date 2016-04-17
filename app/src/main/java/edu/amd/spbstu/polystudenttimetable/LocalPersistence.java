@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
@@ -67,7 +68,7 @@ public class LocalPersistence {
         Object object = null;
         try {
 
-            FileInputStream fileIn = context.getApplicationContext().openFileInput(filename);
+            FileInputStream fileIn = context.openFileInput(filename);
             objectIn = new ObjectInputStream(fileIn);
             object = objectIn.readObject();
 

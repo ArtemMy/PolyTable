@@ -3,7 +3,9 @@ package edu.amd.spbstu.polystudenttimetable;
 import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -43,6 +45,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.webkit.MimeTypeMap;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -69,21 +72,45 @@ import com.google.android.gms.drive.query.Query;
 import com.google.android.gms.drive.query.SearchableField;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAuthIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.google.gson.reflect.TypeToken;
 
+import org.apache.commons.lang3.StringUtils;
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
 import org.joda.time.Days;
+import org.joda.time.Instant;
 import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
+import org.joda.time.LocalTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+import org.json.JSONArray;
 import org.xmlpull.v1.XmlSerializer;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
@@ -93,33 +120,36 @@ public class MainNavigationDrawer extends AppCompatActivity
         DetailedClassFragment.OnFragmentInteractionListener,
         LoginFragment.OnFragmentInteractionListener,
         MyDetailedClassFragment.OnFragmentInteractionListener,
+        MyDetailedObjFragment.OnFragmentInteractionListener,
         MyHomeworkFragment.OnFragmentInteractionListener,
         MyTimeTableFragment.OnFragmentInteractionListener,
         SearchFragment.OnFragmentInteractionListener,
         TimeTableFragment.OnFragmentInteractionListener,
-        REST.ConnectCBs
-//        GoogleApiClient.ConnectionCallbacks,
-//        GoogleApiClient.OnConnectionFailedListener,
+        REST.ConnectCBs,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener
 {
 
 
 //    DBHelper dbHelper;
     private static final String TAG = "polytable_log";
     private static final String LOCAL_FILE = "localtt.data";
+    private static final String PREFERENCE_FIRST_RUN = "polytable_first_run";
 
     private static final int REQUEST_CODE_CAPTURE_IMAGE = 1;
     private static final int REQUEST_CODE_CREATOR = 2;
     private static final int REQUEST_CODE_RESOLUTION = 3;
     private static final int REQUEST_CODE_OPENER = 4;
+    private static final int REQUEST_CODE_RECOVER_PLAY_SERVICES = 5;
     private static final int REQ_ACCPICK = 1;
     private static final int REQ_CONNECT = 2;
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
-
     static final String PREF_IS_LOGGED_IN= "poly_table_logged_in";
     static final String PREF_GROUP= "poly_table_is_group";
     static final String PREF_FILE_ID = "poly_table_file_id";
     private boolean isLoggedIn;
     public Object the_obj = null;
+    public ContactInfo the_contact = null;
     public String the_name = null;
 
     public void onFragmentInteraction(Uri uri)
@@ -127,7 +157,7 @@ public class MainNavigationDrawer extends AppCompatActivity
         return;
     }
     static private  boolean justStarted = true;
-//    GoogleApiClient mGoogleApiClient;
+    GoogleApiClient mGoogleApiClient = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -151,18 +181,99 @@ public class MainNavigationDrawer extends AppCompatActivity
          */
         UT.init(this);
         if (!REST.init(this));
+        int statusCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(this);
+        if( statusCode != ConnectionResult.SUCCESS)
+        {
+            Log.e("statuscode",statusCode+"");
+            if(GooglePlayServicesUtil.isUserRecoverableError(statusCode))
+            {
+                Dialog errorDialog = GooglePlayServicesUtil.getErrorDialog(
+                        statusCode,
+                        MainNavigationDrawer.this,
+                        REQUEST_CODE_RECOVER_PLAY_SERVICES);
+
+                // If Google Play services can provide an error dialog
+                if (errorDialog != null) {
+                    errorDialog.show();
+                }
+            }
+            else
+            {
+                Snackbar snackbar = Snackbar
+                        .make(findViewById(R.id.main_coord_layout), getResources().getString(R.string.services_err), Snackbar.LENGTH_LONG);
+                snackbar.show();
+            }
+        }
+        else {
+            if (UT.AM.getEmail() == null) {
+                startActivityForResult(AccountPicker.newChooseAccountIntent(null,
+                                null, new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE}, true, null, null, null, null),
+                        REQ_ACCPICK);
+            }
+        }
 
         isLoggedIn = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(PREF_IS_LOGGED_IN, false);
 
 
         Map<Integer, Group> tmp_groups = (Map<Integer, Group>)(LocalPersistence.readObjectFromFile(getApplicationContext(), "recent_groups.data"));
+        for(Group gr : tmp_groups.values()) {
+            for(Lesson lesson : gr.m_listLessons) {
+                for (List<RegLessonInstance> lreg : lesson.m_reg.values()) {
+                    for (RegLessonInstance reg : lreg) {
+                        reg.parent = lesson;
+                        for (RegLessonInstance.Homework hw : reg.m_homework.values()) {
+                            hw.m_lesson = reg;
+                        }
+                    }
+                }
+            }
+        }
         if(tmp_groups != null)
             StaticStorage.m_recentGroups = tmp_groups;
         Map<Integer, Lecturer> tmp_lects = (Map<Integer, Lecturer>)(LocalPersistence.readObjectFromFile(getApplicationContext(), "recent_lects.data"));
+        for(Lecturer lect : tmp_lects.values()) {
+            for(Lesson lesson : lect.m_listLessons) {
+                for (List<RegLessonInstance> lreg : lesson.m_reg.values()) {
+                    for (RegLessonInstance reg : lreg) {
+                        reg.parent = lesson;
+                        for (RegLessonInstance.Homework hw : reg.m_homework.values()) {
+                            hw.m_lesson = reg;
+                        }
+                    }
+                }
+            }
+        }
         if(tmp_lects != null)
             StaticStorage.m_recentLecturers = tmp_lects;
-        if (!isOnline()) {
+        if(isLoggedIn) {
             the_obj = LocalPersistence.readObjectFromFile(getApplicationContext(), LOCAL_FILE);
+            if (the_obj instanceof Group) {
+                the_name = ((Group) the_obj).m_info.m_name;
+                the_contact = ((Group) the_obj).m_info.m_contact;
+                for(Lesson lesson : ((Group)the_obj).m_listLessons) {
+                    for (List<RegLessonInstance> lreg : lesson.m_reg.values()) {
+                        for (RegLessonInstance reg : lreg) {
+                            reg.parent = lesson;
+                            for (RegLessonInstance.Homework hw : reg.m_homework.values()) {
+                                hw.m_lesson = reg;
+                            }
+                        }
+                    }
+                }
+            } else if (the_obj instanceof Lecturer){
+                the_name = ((Lecturer) the_obj).m_info.m_fio;
+                the_contact = ((Lecturer) the_obj).m_info.m_contact;
+                for(Lesson lesson : ((Lecturer)the_obj).m_listLessons) {
+                    for (List<RegLessonInstance> lreg : lesson.m_reg.values()) {
+                        for (RegLessonInstance reg : lreg) {
+                            reg.parent = lesson;
+                            for (RegLessonInstance.Homework hw : reg.m_homework.values()) {
+                                hw.m_lesson = reg;
+                            }
+                        }
+                    }
+                }
+            }
         }
         /*
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -174,6 +285,19 @@ public class MainNavigationDrawer extends AppCompatActivity
             }
         });
         */
+        if(Locale.getDefault().getDisplayLanguage().equals("English")) {
+            SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(this);
+            boolean firstRun = p.getBoolean(PREFERENCE_FIRST_RUN, true);
+            if(firstRun) {
+                    new AlertDialog.Builder(this)
+                            .setTitle(getResources().getString(R.string.eng_lang))
+                            .setMessage(getResources().getString(R.string.rus_titles))
+                            .setPositiveButton(android.R.string.ok, null) // dismisses by default
+                            .create()
+                            .show();
+                }
+                p.edit().putBoolean(PREFERENCE_FIRST_RUN, false).commit();
+        }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -281,10 +405,13 @@ public class MainNavigationDrawer extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            if (getSupportFragmentManager().getBackStackEntryCount() > 0 ) {
+            if (getSupportFragmentManager().getBackStackEntryCount() > 1 ) {
                 getSupportFragmentManager().popBackStack();
             } else {
-                super.onBackPressed();
+                Intent i = new Intent(this, ActivityMain.class);
+                finish();
+                startActivity(i);
+//                super.onBackPressed();
             }
         }
     }
@@ -485,6 +612,58 @@ public class MainNavigationDrawer extends AppCompatActivity
                     suicide(R.string.wrong_data);  //---------------------------------->>>
                 }
                 return;
+            case REQUEST_CODE_OPENER:
+                if (result == RESULT_OK) {
+                    final DriveId driveId = (DriveId) data.getParcelableExtra(
+                            OpenFileActivityBuilder.EXTRA_RESPONSE_DRIVE_ID);
+
+                    final String rid = driveId.getResourceId();
+//                    Uri uri = Uri.parse("intent://drive.google.com/drive/u/0/mobile/folders/" + driveId.getResourceId());
+
+                    Log.d(TAG, "Selected file's ID: " + driveId);
+
+                    new AsyncTask<Void, String, File>() {
+                        @Override
+                        protected File doInBackground(Void... params) {
+                            String by = REST.read(rid);
+                            try {
+                                Metadata meta = driveId.asDriveFile().getMetadata(mGoogleApiClient).await().getMetadata();
+                                File tmpFile = File.createTempFile(meta.getTitle(), meta.getFileExtension(), UT.acx.getExternalCacheDir());
+
+                                FileOutputStream fileOut = openFileOutput(tmpFile.getAbsolutePath(), Activity.MODE_PRIVATE);
+                                OutputStreamWriter objectOut = new OutputStreamWriter(fileOut);
+                                objectOut.write(by);
+                                objectOut.flush();
+                                objectOut.close();
+                                return tmpFile;
+                            }
+                            catch (IOException e) {
+                                Log.d(TAG, e.getMessage());
+                                return null;
+                            }
+                        }
+                        @Override
+                        protected void onPostExecute(File nada) {
+                            super.onPostExecute(nada);
+                            Log.d(TAG, "DONE");
+
+                            MimeTypeMap myMime = MimeTypeMap.getSingleton();
+                            String mimeType = myMime.getMimeTypeFromExtension(fileExt(nada.getName()).substring(1));
+
+                            Intent newIntent = new Intent(Intent.ACTION_VIEW);
+                            newIntent.setDataAndType(Uri.fromFile(nada), mimeType);
+                            newIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                            try {
+                                startActivity(newIntent);
+                            } catch (ActivityNotFoundException e) {
+                                Toast.makeText(MainNavigationDrawer.this, "No handler for this type of file.", Toast.LENGTH_LONG).show();
+                            }
+                        }
+
+                    }.execute();
+                }
+                return;
         }
         if(((NavigationView) findViewById(R.id.nav_view)).getMenu().getItem(0).isChecked()) {
                 LoginFragment fragment = (LoginFragment) getSupportFragmentManager()
@@ -497,6 +676,26 @@ public class MainNavigationDrawer extends AppCompatActivity
             super.onActivityResult(requestCode, result, data);
         }
     }
+
+    private String fileExt(String url) {
+        if (url.indexOf("?") > -1) {
+            url = url.substring(0, url.indexOf("?"));
+        }
+        if (url.lastIndexOf(".") == -1) {
+            return null;
+        } else {
+            String ext = url.substring(url.lastIndexOf(".") + 1);
+            if (ext.indexOf("%") > -1) {
+                ext = ext.substring(0, ext.indexOf("%"));
+            }
+            if (ext.indexOf("/") > -1) {
+                ext = ext.substring(0, ext.indexOf("/"));
+            }
+            return ext.toLowerCase();
+
+        }
+    }
+
     private void suicide(int rid) {
         UT.AM.setEmail(null);
         Snackbar snackbar = Snackbar
@@ -580,14 +779,16 @@ public class MainNavigationDrawer extends AppCompatActivity
                 List<String> ids;
 
                 if (obj instanceof Group) {
-                    titl = String.valueOf(((Group) obj).m_info.m_id);
+                    titl = ((Group) obj).m_info.m_name.split("/")[0];
                     the_name = ((Group)obj).m_info.m_name;
+                    the_contact = ((Group)obj).m_info.m_contact;
                     gen = ((Group) obj).m_info;
                     lessons = ((Group) obj).m_listLessons;
                     ids = ((Group)obj).m_info.m_listLessonsId;
                 } else if (obj instanceof Lecturer){
-                    titl = String.valueOf(((Lecturer) obj).m_info.m_id);
+                    titl = ((Lecturer) obj).m_info.m_fio.split(" ")[0];
                     the_name = ((Lecturer)obj).m_info.m_fio;
+                    the_contact = ((Lecturer)obj).m_info.m_contact;
                     gen = ((Lecturer)obj).m_info;
                     lessons = ((Lecturer) obj).m_listLessons;
                     ids = ((Lecturer)obj).m_info.m_listLessonsId;
@@ -601,28 +802,57 @@ public class MainNavigationDrawer extends AppCompatActivity
                         // others
                         ids.clear();
                         for(int i = 0; i < lessons.size(); ++i) {
-                            File fll = UT.byte2File(serializableToByte(lessons.get(i)), "tmp");
+//                            File fll = UT.byte2File(serializableToByte(lessons.get(i)), "tmp");
+                            Gson gson = new GsonBuilder()
+                                    .setPrettyPrinting()
+                                    .registerTypeAdapter(LocalDate.class, new LocalDateSerializer())
+                                    .create();
+                            File fll = UT.str2File(gson.toJson(lessons.get(i)), "tmp");
                             String id = null;
                             if (fll != null) {
                                 id = REST.createFile(rsid, String.valueOf(lessons.get(i).hashCode()), UT.MIME_TEXT, fll);
                                 fll.delete();
                             }
+                            Log.d(TAG, "created lesson" + String.valueOf(i));
                             lessons.get(i).driveFileId = id;
                             ids.add(i, id);
                         }
                         // main file
-                        File fl = UT.byte2File(serializableToByte(gen), "tmp");
+//                        File fl = UT.byte2File(serializableToByte(gen), "tmp");
+                        Gson gson = new GsonBuilder()
+                                .setPrettyPrinting()
+                                .registerTypeAdapter(LocalDate.class, new LocalDateSerializer())
+                                .create();
+                        File fl = UT.str2File(gson.toJson(gen), "tmp");
+                        if(fl == null) {
+                            Log.d(TAG, "fl null");
+                        } else {
+                            Log.d(TAG, "fl " + String.valueOf(fl));
+                        }
+
+                        if(titl == null) {
+                            Log.d(TAG, "titl null");
+                        } else {
+                            Log.d(TAG, "fl " + String.valueOf(fl));
+                        }
+
+                        if(titl == null) {
+                            Log.d(TAG, "rsid null");
+                        } else {
+                            Log.d(TAG, "rsid " + String.valueOf(rsid));
+                        }
+
                         String gid = null;
                         if (fl != null) {
                             gid = REST.createFile(rsid, titl, UT.MIME_TEXT, fl);
                             fl.delete();
                         }
-                        Log.d(TAG, "created general");
+
+                        Log.d(TAG, "created general " + String.valueOf(gid));
                         SharedPreferences.Editor editor = getSharedPreferences(
                                 getPackageName(), Context.MODE_PRIVATE).edit();
                         editor.putString(PREF_FILE_ID, gid);
-                        editor.commit();
-                        Log.d(TAG, "saved");
+                        Log.d(TAG, "saved " + String.valueOf(editor.commit()));
 
                         the_obj = obj;
                         setIsLoggedIn(true);
@@ -675,13 +905,22 @@ public class MainNavigationDrawer extends AppCompatActivity
             @Override
             protected String doInBackground(Void... params) {
 
-                File fl = UT.byte2File(serializableToByte(lesson), "tmp");
+ //               File fl = UT.byte2File(serializableToByte(lesson), "tmp");
+                Gson gson = new GsonBuilder()
+                        .setPrettyPrinting()
+                        .registerTypeAdapter(LocalDate.class, new LocalDateSerializer())
+                        .create();
+
+                File fl = UT.str2File(
+                        gson.toJson(lesson), "tmp");
                 return REST.update(lesson.driveFileId, String.valueOf(lesson.hashCode()), UT.MIME_TEXT, null, fl);
             }
+
             @Override
             protected void onProgressUpdate(String... strings) { super.onProgressUpdate(strings);
                 Log.d(TAG, strings[0]);
             }
+
             @Override
             protected void onPostExecute(String nada) {
                 super.onPostExecute(nada);
@@ -715,7 +954,7 @@ public class MainNavigationDrawer extends AppCompatActivity
             ProgressDialog pb;
             @Override
             protected String doInBackground(Void... params) {
-                String gid = getSharedPreferences("edu.amd.spbstu.polystudenttimetable", Context.MODE_PRIVATE).getString(PREF_FILE_ID, null);
+                String gid = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).getString(PREF_FILE_ID, null);
                 if(gid == null)
                     Log.d(TAG, "gid == null");
                 if (gid == null)  { return null; }
@@ -730,7 +969,13 @@ public class MainNavigationDrawer extends AppCompatActivity
                     gen = ((Lecturer) the_obj).m_info;
                 }
 
-                File fl = UT.byte2File(serializableToByte(gen), "tmp");
+//                File fl = UT.byte2File(serializableToByte(gen), "tmp");
+                Gson gson = new GsonBuilder()
+                        .setPrettyPrinting()
+                        .registerTypeAdapter(LocalDate.class, new LocalDateSerializer())
+                        .create();
+
+                File fl = UT.str2File(gson.toJson(gen), "tmp");
                 return REST.update(gid, titl, UT.MIME_TEXT, null, fl);
             }
             @Override
@@ -765,6 +1010,54 @@ public class MainNavigationDrawer extends AppCompatActivity
 
         }.execute();
     }
+    public void open() {
+
+        Log.i(TAG, "Creating new contents.");
+        if(mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addApi(Drive.API)
+                    .addScope(Drive.SCOPE_FILE)
+                    .addScope(Drive.SCOPE_APPFOLDER)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .build();
+        }
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    public void onConnectionSuspended(int cause) {
+        Log.i(TAG, "GoogleApiClient connection suspended");
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult result) {
+        Log.i(TAG, "GoogleApiClient connection failed: " + result.toString());
+        if (!result.hasResolution()) {
+            // show the localized error dialog.
+            GoogleApiAvailability.getInstance().getErrorDialog(this, result.getErrorCode(), 0).show();
+            return;
+        }
+        try {
+            result.startResolutionForResult(this, REQUEST_CODE_RESOLUTION);
+        } catch (IntentSender.SendIntentException e) {
+            Log.e(TAG, "Exception while starting resolution activity", e);
+        }
+    }
+    @Override
+    public void onConnected(Bundle connectionHint) {
+//        super.onConnected(connectionHint);
+        IntentSender intentSender = Drive.DriveApi
+                .newOpenFileActivityBuilder()
+                .setMimeType(new String[]{"text/plain", "text/html"})
+                .build(mGoogleApiClient);
+        try {
+            startIntentSenderForResult(
+                    intentSender, REQUEST_CODE_OPENER, null, 0, 0, 0);
+        } catch (IntentSender.SendIntentException e) {
+            Log.w(TAG, "Unable to send intent", e);
+        }
+    }
 /*
     public void update() {
         if (isLoggedIn()) {
@@ -797,24 +1090,64 @@ public class MainNavigationDrawer extends AppCompatActivity
             protected Boolean doInBackground(Void... params) {
                 Log.d(TAG, "loading general");
 
-                String gid = getSharedPreferences("edu.amd.spbstu.polystudenttimetable", Context.MODE_PRIVATE).getString(PREF_FILE_ID, null);
+                String gid = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE).getString(PREF_FILE_ID, null);
                 if(gid == null)
                     Log.d(TAG, "gid == null");
                 if (gid == null)  { return null; }
 
-
-                byte[] by = REST.read(gid);
+//                byte[] by = REST.read(gid);
+                String str = REST.read(gid);
                 Log.d(TAG, "here");
-                if(by == null) return  null;
+                if(str == null) return  null;
 
-                Log.d(TAG, String.valueOf(by.hashCode()));
+//                Log.d(TAG, String.valueOf(str.hashCode()));
 
-                Object obj = bytesToSerializable(by);
-                if(obj == null) return  null;
+//                Object obj = bytesToSerializable(by);
+                Object obj;
+                try {
+                    Gson gson = new GsonBuilder()
+                            .setPrettyPrinting()
+                            .registerTypeAdapter(LocalDate.class, new LocalDateSerializer())
+                            .create();
+                    obj = gson.fromJson(str, GroupInfo.class);
+                } catch (Exception e) {
+                    Log.d(TAG, e.getMessage());
+                    obj = null;
+                }
 
                 List<Lesson> lessons;
                 List<String> ids;
                 Object result;
+                if(obj != null) {
+                    result = new Group();
+                    ((Group)result).m_info = (GroupInfo)obj;
+                    the_name = ((GroupInfo)obj).m_name;
+                    the_contact = ((GroupInfo)obj).m_contact;
+                    lessons = ((Group)result).m_listLessons;
+                    ids = ((Group)result).m_info.m_listLessonsId;
+                } else {
+                    Log.d(TAG, "4");
+                    try {
+                        Gson gson = new GsonBuilder()
+                                .setPrettyPrinting()
+                                .registerTypeAdapter(LocalDate.class, new LocalDateSerializer())
+                                .create();
+
+                        obj = gson.fromJson(str, LecturerInfo.class);
+                    } catch (Exception e) {
+                        Log.d(TAG, e.getMessage());
+                        obj = null;
+                    }
+                    if(obj == null) return  null;
+                    result = new Lecturer();
+                    ((Lecturer)result).m_info = (LecturerInfo)obj;
+                    the_name = ((LecturerInfo)obj).m_fio;
+                    the_contact = ((LecturerInfo)obj).m_contact;
+
+                    lessons = ((Lecturer)result).m_listLessons;
+                    ids = ((Lecturer)result).m_info.m_listLessonsId;
+                }
+                /*
                 if(obj instanceof GroupInfo) {
                     result = new Group();
                     ((Group)result).m_info = (GroupInfo)obj;
@@ -822,6 +1155,7 @@ public class MainNavigationDrawer extends AppCompatActivity
                     lessons = ((Group)result).m_listLessons;
                     ids = ((Group)result).m_info.m_listLessonsId;
                 } else if(obj instanceof LecturerInfo) {
+
                     result = new Lecturer();
                     ((Lecturer)result).m_info = (LecturerInfo)obj;
                     the_name = ((LecturerInfo)obj).m_fio;
@@ -830,13 +1164,34 @@ public class MainNavigationDrawer extends AppCompatActivity
                 } else {
                     return null;
                 }
-
+*/
+                Log.d(TAG, "1");
                 for(int i = 0; i < ids.size(); ++i) {
-                    byte[] lby = REST.read(ids.get(i));
+//                    byte[] lby = REST.read(ids.get(i));
+                    String lby = REST.read(ids.get(i));
                     if(lby == null) return  null;
-                    lessons.add(i, (Lesson)bytesToSerializable(lby));
-                    if(lessons.get(i) == null) return  null;
+//                    lessons.add(i, (Lesson)bytesToSerializable(lby));
+                    Log.d(TAG, "2");
+                    Gson gson = new GsonBuilder()
+                            .setPrettyPrinting()
+                            .registerTypeAdapter(LocalDate.class, new LocalDateSerializer())
+                            .create();
 
+                    Log.d(TAG, "3");
+                    Log.d(TAG, "exception on " + String.valueOf(i));
+                    Log.d(TAG, lby);
+                    Type type = new TypeToken<Lesson>() { }.getType();
+                    Lesson l = gson.fromJson(lby, type);
+                    lessons.add(i, l);
+                    if(lessons.get(i) == null) return  null;
+                    for(List<RegLessonInstance> lreg : lessons.get(i).m_reg.values()) {
+                        for(RegLessonInstance reg: lreg) {
+                            reg.parent = lessons.get(i);
+                            for(RegLessonInstance.Homework hw: reg.m_homework.values()) {
+                                hw.m_lesson = reg;
+                            }
+                        }
+                    }
                     lessons.get(i).driveFileId = ids.get(i);
                 }
                 Log.d(TAG, "4");
@@ -874,13 +1229,18 @@ public class MainNavigationDrawer extends AppCompatActivity
     byte[] serializableToByte(Object obj) {
         // serialize the object
         try {
+            Log.d(TAG, "0");
             ByteArrayOutputStream bo = new ByteArrayOutputStream();
+            Log.d(TAG, "1");
             ObjectOutputStream so = new ObjectOutputStream(bo);
+            Log.d(TAG, "2");
             so.writeObject(obj);
+            Log.d(TAG, "3");
             so.flush();
+            Log.d(TAG, "4");
             return bo.toByteArray();
         } catch (Exception e) {
-            System.out.println(e);
+            Log.d(TAG, e.getMessage());
         }
         return null;
     }
@@ -896,6 +1256,7 @@ public class MainNavigationDrawer extends AppCompatActivity
         }
         return null;
     }
+
     /*
     @Override
     public void onConnectionFailed(ConnectionResult result) {
@@ -999,6 +1360,35 @@ public class MainNavigationDrawer extends AppCompatActivity
         Log.i(TAG, "GoogleApiClient connection suspended");
     }
 */
+    public class LocalDateSerializer implements JsonSerializer<LocalDate>, JsonDeserializer<LocalDate>
+    {
+
+        private static final String PATTERN = "'yyyy-MM-dd'";
+        final DateTimeFormatter fmt = DateTimeFormat.forPattern(PATTERN);
+
+
+        @Override
+        public JsonElement serialize(LocalDate src, Type typeOfSrc, JsonSerializationContext context)
+        {
+            String retVal = fmt.print(src);
+            Log.v(TAG, "MY LOCALDATE SERIALIZED" + retVal);
+//            return new JsonPrimitive(retVal);
+            return new JsonPrimitive(src.toString());
+        }
+
+
+        @Override
+        public LocalDate deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException
+        {
+            String str = json.toString();
+            str = str.substring(1, str.length() - 1);
+            Log.v(TAG,"MY LOCALDATE DESERIALIZED" + str);
+//            return fmt.parseLocalDate(str);
+            return LocalDate.parse(str);
+        }
+    }
+
     public boolean isGroup() {
         if(the_obj != null)
             return the_obj.getClass().equals(Group.class);

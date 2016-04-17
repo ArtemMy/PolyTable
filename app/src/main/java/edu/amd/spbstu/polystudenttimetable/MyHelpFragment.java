@@ -65,9 +65,7 @@ public class MyHelpFragment extends Fragment {
             R.drawable.s3,
             R.drawable.s2,
             R.drawable.s4,
-            R.drawable.s5,
-            R.drawable.s6,
-            R.drawable.s7};
+            R.drawable.s5};
     public static MyHelpFragment newInstance(MainNavigationDrawer act) {
 
         MyHelpFragment fragment = new MyHelpFragment(act);

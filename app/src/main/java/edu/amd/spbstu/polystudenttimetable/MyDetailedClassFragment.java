@@ -3,6 +3,9 @@ package edu.amd.spbstu.polystudenttimetable;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.SharedPreferences;
+import android.graphics.drawable.GradientDrawable;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -30,6 +33,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
@@ -66,6 +70,8 @@ public class MyDetailedClassFragment extends Fragment {
     private static final String ARG_PARAM = "param1";
 
     // TODO: Rename and change types of parameters
+    static final String PREF_LES_COL= "poly_table_lesson_color";
+
     private static final String TAG = "polytable_log";
     private Lesson mLesson;
     private Lesson mEditLesson;
@@ -78,9 +84,12 @@ public class MyDetailedClassFragment extends Fragment {
 
     private View view;
     private View mTitle;
+    private ArrayList<View> mColors;
     private View mFio;
     private View mGroups;
     private View mInst;
+
+    private int mCurCol;
 
     FloatingActionButton myFab;
 
@@ -162,6 +171,13 @@ public class MyDetailedClassFragment extends Fragment {
                         }
                     }
                     mLesson = mEditLesson;
+
+                    SharedPreferences.Editor editor = getActivity().getSharedPreferences(
+                            getActivity().getPackageName(), Context.MODE_PRIVATE).edit();
+                    editor.putInt(PREF_LES_COL+String.valueOf(mLesson.hashCode()), mCurCol);
+                    editor.commit();
+                    Log.d(TAG, String.valueOf(mCurCol));
+
                     ((MainNavigationDrawer)getActivity()).write(mLesson);
 //                    new WriteFile(getActivity(), mLesson).execute();
                     init();
@@ -177,6 +193,15 @@ public class MyDetailedClassFragment extends Fragment {
                         ObjectInputStream in = new ObjectInputStream(
                                 new ByteArrayInputStream(bos.toByteArray()));
                         mEditLesson = (Lesson) in.readObject();
+                        for (List<RegLessonInstance> lreg : mEditLesson.m_reg.values()) {
+                            for (RegLessonInstance reg : lreg) {
+                                reg.parent = mEditLesson;
+                                for (RegLessonInstance.Homework hw : reg.m_homework.values()) {
+                                    hw.m_lesson = reg;
+                                }
+                            }
+                        }
+
                     }
                     catch(IOException e) {
                         e.printStackTrace();
@@ -227,6 +252,62 @@ public class MyDetailedClassFragment extends Fragment {
         LayoutInflater inflater = LayoutInflater.from(getActivity());
         LinearLayout detailed_class_list = (LinearLayout) view.findViewById(R.id.detailed_container);
         detailed_class_list.removeAllViewsInLayout();
+
+        LinearLayout colorViews = (LinearLayout) view.findViewById(R.id.colors_bar);
+        colorViews.removeAllViewsInLayout();
+        colorViews.removeAllViews();
+
+        if(isEditMode) {
+            if(mColors == null) {
+                mColors = new ArrayList<>();
+            } else {
+                mColors.clear();
+            }
+
+            mCurCol = getActivity().getSharedPreferences(getActivity().getPackageName(), Context.MODE_PRIVATE).getInt(PREF_LES_COL+String.valueOf(mLesson.hashCode()), 0);
+            Log.d(TAG, String.valueOf(mCurCol));
+
+            for (int i = 0; i < 6; i++) {
+                final Button b = new Button(getActivity());
+
+                GridView.LayoutParams params = new GridView.LayoutParams(80, 80);
+                b.setLayoutParams(params);
+
+                final GradientDrawable gd = new GradientDrawable();
+                gd.setColor(getResources().getColor(StaticStorage.lesColor[i]));
+                gd.setCornerRadius(5);
+                if (i == mCurCol) {
+                    gd.setStroke(10, 0xCC333333);
+                } else {
+                    gd.setStroke(7, 0x77CCCCCC);
+                }
+                b.setBackgroundDrawable(gd);
+                b.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        for(int i = 0; i < mColors.size(); ++i) {
+                            final GradientDrawable gd = new GradientDrawable();
+                            gd.setColor(getResources().getColor(StaticStorage.lesColor[i]));
+                            gd.setCornerRadius(5);
+                            gd.setStroke(7, 0x77CCCCCC);
+                            ((Button) mColors.get(i)).setBackgroundDrawable(gd);
+                        }
+                        final GradientDrawable gd = new GradientDrawable();
+                        gd.setColor(getResources().getColor(StaticStorage.lesColor[mColors.indexOf(b)]));
+                        gd.setCornerRadius(5);
+                        gd.setStroke(10, 0xCC333333);
+
+                        ((Button) b).setBackgroundDrawable(gd);
+
+                        mCurCol = mColors.indexOf(b);
+                        Log.d(TAG, String.valueOf(mCurCol));
+
+                    }
+                });
+                mColors.add(b);
+                colorViews.addView(b);
+            }
+        }
 
         String[] titles = getResources().getStringArray(R.array.class_details);
 
@@ -488,7 +569,8 @@ public class MyDetailedClassFragment extends Fragment {
             GroupInfo tmpGroup = (GroupInfo)mGroupListAdapter.getItem(position);
 
             Log.d("init", tmpGroup.toString());
-            new ServerGetTable(tmpGroup, getActivity()).execute();
+            ((MainNavigationDrawer)getActivity()).switchContent(MyDetailedObjFragment.newInstance(tmpGroup));
+//            new ServerGetTable(tmpGroup, getActivity()).execute();
         }
 
     };
@@ -528,8 +610,10 @@ public class MyDetailedClassFragment extends Fragment {
 
         @Override
         public void onClick(View view) {
-            if(mLesson.m_teacher.m_fio != getActivity().getResources().getString(R.string.not_set))
-                new ServerGetTable(mLesson.m_teacher, getActivity()).execute();
+            if(mLesson.m_teacher.m_fio != "Not set" && mLesson.m_teacher.m_fio != "Не задан")
+//                new ServerGetTable(mLesson.m_teacher, getActivity()).execute();
+//                new ServerGetLecturers(getActivity()).execute(mLesson.m_teacher.m_fio);
+            ((MainNavigationDrawer)getActivity()).switchContent(MyDetailedObjFragment.newInstance(mLesson.m_teacher));
         }
 
     };

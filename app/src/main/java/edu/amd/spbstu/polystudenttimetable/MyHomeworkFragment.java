@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
@@ -130,7 +131,7 @@ public class MyHomeworkFragment extends Fragment {
             public boolean onChildClick(ExpandableListView parent, View view, int groupPosition, int childPosition, long id) {
                 final RegLessonInstance.Homework hmwrk = hws.get(groupPosition).get(childPosition);
 
-                AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
+                final AlertDialog.Builder alert = new AlertDialog.Builder(getActivity());
                 final EditText edittext = new EditText(getActivity());
 
                 edittext.setHint(R.string.homework_hint);
@@ -145,6 +146,11 @@ public class MyHomeworkFragment extends Fragment {
                                 Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
                     }
                     */
+                        for(int i = e.length() - 1; i > 0; i--) {
+                            if(e.subSequence(i-1, i).toString().equals("\n") && e.subSequence(i, i + 1).toString().equals("\n"))
+                                e.replace(i, i+1, "");
+                        }
+
                         BulletSpan toRemoveSpans[] = e.getSpans(0, e.length(), BulletSpan.class);
                         for (int i = 0; i < toRemoveSpans.length; i++)
                             e.removeSpan(toRemoveSpans[i]);
@@ -157,12 +163,11 @@ public class MyHomeworkFragment extends Fragment {
                             line = lines[index];
                             int length = spannableStringBuilder.length();
                             spannableStringBuilder.append(line);
+
                             if (index != lines.length - 1) {
                                 spannableStringBuilder.append("\n");
                             }
-                            if (TextUtils.isEmpty(line)) {
-//                                spannableStringBuilder.append("\n");
-                            } else {
+                            if (!TextUtils.isEmpty(line)) {
                                 e.setSpan(new BulletSpan(30), length, length + 1,
                                         Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
                             }
@@ -185,7 +190,16 @@ public class MyHomeworkFragment extends Fragment {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         hmwrk.m_task = edittext.getText().toString();
 
-                        ((MainNavigationDrawer)getActivity()).write(hmwrk.m_lesson.parent);
+                        if (edittext.getText().toString().isEmpty()) {
+                            Snackbar snackbar = Snackbar
+                                    .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.cantdoempty), Snackbar.LENGTH_LONG);
+                            snackbar.show();
+                            return;
+                        } else {
+                            hmwrk.m_task = edittext.getText().toString();
+                        }
+
+                        ((MainNavigationDrawer) getActivity()).write(hmwrk.m_lesson.parent);
 //                        new WriteFile(getActivity(), hmwrk.m_lesson.parent).execute();
                         lv.setAdapter(new ExpandableListAdapter());
                     }

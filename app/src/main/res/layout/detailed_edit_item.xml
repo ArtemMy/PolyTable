@@ -28,22 +28,6 @@
         android:layout_marginTop="5dp"
         android:layout_marginBottom="15dp"
         android:background="#448AFF"/>
-    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/detailed_item_value"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:elegantTextHeight="true"
-        android:textSize="18sp"
-        android:gravity="end" >
-        <requestFocus />
-    </TextView>
 
-    <EditText xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/detailed_item_value_edit"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:elegantTextHeight="true"
-        android:textSize="18sp"
-        android:visibility="gone"
-        android:gravity="end" />
+
 </LinearLayout>

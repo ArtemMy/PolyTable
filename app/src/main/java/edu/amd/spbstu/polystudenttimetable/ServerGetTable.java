@@ -157,12 +157,20 @@ public class ServerGetTable extends AsyncTask<Void, String, String>
                             g.m_faculty.m_name = (String) objFac.get("name");
                             g.m_faculty.m_id = (int) objGroup.get("id");
                             g.m_faculty.m_abbr = (String) objFac.get("abbr");
-                            lesson.m_list_groups.add(g);
+                            if(isGroup && g.m_id == m_group.m_id)
+                                lesson.m_list_groups.add(m_group);
+                            else
+                                lesson.m_list_groups.add(g);
                         }
                     }
                     Log.d("init s", "add lesson");
                     lesson.m_subject = strSubject;
-                    lesson.m_teacher = lect;
+
+                    if(!isGroup && lect.m_id == m_lect.m_id)
+                        lesson.m_teacher = m_lect;
+                    else
+                        lesson.m_teacher = lect;
+
                     if (listLessons.contains(lesson)) {
                         int ind = listLessons.indexOf(lesson);
                         lesson = listLessons.get(ind);
@@ -229,6 +237,23 @@ public class ServerGetTable extends AsyncTask<Void, String, String>
     @Override
     protected void onPreExecute()
     {
+        if(!((MainNavigationDrawer)mAct).isLoggedIn()) {
+            if(((MainNavigationDrawer) mAct).the_obj != null) {
+                if(isGroup && ((MainNavigationDrawer) mAct).isGroup()) {
+                    if(((Group)((MainNavigationDrawer) mAct).the_obj).m_info.equals(m_group)) {
+                        ((MainNavigationDrawer) mAct).switchContent(new MyTimeTableFragment());
+                        cancel(true);
+                        return;
+                    }
+                } else if(!isGroup && !((MainNavigationDrawer) mAct).isGroup()) {
+                    if(((Lecturer)((MainNavigationDrawer) mAct).the_obj).m_info.equals(m_lect)) {
+                        ((MainNavigationDrawer) mAct).switchContent(new MyTimeTableFragment());
+                        cancel(true);
+                        return;
+                    }
+                }
+            }
+        }
         if(!((MainNavigationDrawer)mAct).isOnline()) {
             ((MainNavigationDrawer) mAct).askForInternet();
             cancel(true);

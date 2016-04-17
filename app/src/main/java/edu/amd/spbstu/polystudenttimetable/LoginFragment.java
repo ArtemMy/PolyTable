@@ -4,6 +4,7 @@ import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -116,6 +117,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
 
     private static final String TAG = "polytable_log";
     static final String PREF_FILE_ID = "poly_table_file_id";
+    private static final String PREFERENCE_FIRST_RUN = "polytable_first_run_login";
 
     private static final int REQUEST_CODE_RESOLUTION = 3;
     private static final int REQUEST_CODE_OPENER = 4;
@@ -132,6 +134,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
     static final int REQUEST_ACCOUNT_PICKER = 1000;
     static final int REQUEST_AUTHORIZATION = 1001;
     static final int REQUEST_GOOGLE_PLAY_SERVICES = 1002;
+    private static final int REQUEST_CODE_RECOVER_PLAY_SERVICES = 5;
     private static final int REQ_ACCPICK = 1;
     private static final int REQ_CONNECT = 2;
     private static final String PREF_ACCOUNT_NAME = "accountName";
@@ -162,6 +165,17 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
         if (!((MainNavigationDrawer)getActivity()).isOnline()) ((MainNavigationDrawer)getActivity()).askForInternet();
         Log.d(TAG, "login fragment onCreate");
 
+        SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        boolean firstRun = p.getBoolean(PREFERENCE_FIRST_RUN, true);
+        if(firstRun) {
+            new AlertDialog.Builder(getActivity())
+                    .setTitle(getResources().getString(R.string.warn_create_tit))
+                    .setMessage(getResources().getString(R.string.warn_create_tex))
+                    .setPositiveButton(android.R.string.ok, null) // dismisses by default
+                    .create()
+                    .show();
+            p.edit().putBoolean(PREFERENCE_FIRST_RUN, false).commit();
+        }
         /*
         GoogleApiClient.Builder builder = new GoogleApiClient.Builder(getActivity())
                 .addApi(Drive.API)
@@ -203,10 +217,37 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
                 .setBackOff(new ExponentialBackOff())
                 .setSelectedAccountName(settings.getString(PREF_ACCOUNT_NAME, null));
         */
-        if (UT.AM.getEmail() == null) {
-            getActivity().startActivityForResult(AccountPicker.newChooseAccountIntent(null,
-                            null, new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE}, true, null, null, null, null),
-                    REQ_ACCPICK);
+        UT.init(getActivity());
+        if (!REST.init(getActivity()));
+        int statusCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(getActivity());
+        if( statusCode != ConnectionResult.SUCCESS)
+        {
+            Log.e("statuscode",statusCode+"");
+            if(GooglePlayServicesUtil.isUserRecoverableError(statusCode))
+            {
+                Dialog errorDialog = GooglePlayServicesUtil.getErrorDialog(
+                        statusCode,
+                        getActivity(),
+                        REQUEST_CODE_RECOVER_PLAY_SERVICES);
+
+                // If Google Play services can provide an error dialog
+                if (errorDialog != null) {
+                    errorDialog.show();
+                }
+            }
+            else
+            {
+                Snackbar snackbar = Snackbar
+                        .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.services_err), Snackbar.LENGTH_LONG);
+                snackbar.show();
+            }
+        }
+        else {
+            if (UT.AM.getEmail() == null) {
+                startActivityForResult(AccountPicker.newChooseAccountIntent(null,
+                                null, new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE}, true, null, null, null, null),
+                        REQ_ACCPICK);
+            }
         }
 
     }
@@ -214,13 +255,36 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         if (UT.AM.getEmail() == null) {
-            getActivity().startActivityForResult(AccountPicker.newChooseAccountIntent(null,
-                            null, new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE}, true, null, null, null, null),
-                    REQ_ACCPICK);
+            int statusCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(getActivity());
+            if( statusCode != ConnectionResult.SUCCESS)
+            {
+                Log.e("statuscode",statusCode+"");
+                if(GooglePlayServicesUtil.isUserRecoverableError(statusCode))
+                {
+                    Dialog errorDialog = GooglePlayServicesUtil.getErrorDialog(
+                            statusCode,
+                            getActivity(),
+                            REQUEST_CODE_RECOVER_PLAY_SERVICES);
 
-            Snackbar snackbar = Snackbar
-                    .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.try_again), Snackbar.LENGTH_LONG);
-            snackbar.show();
+                    // If Google Play services can provide an error dialog
+                    if (errorDialog != null) {
+                        errorDialog.show();
+                    }
+                }
+                else
+                {
+                    Snackbar snackbar = Snackbar
+                            .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.services_err), Snackbar.LENGTH_LONG);
+                    snackbar.show();
+                }
+            }
+            else {
+                if (UT.AM.getEmail() == null) {
+                    startActivityForResult(AccountPicker.newChooseAccountIntent(null,
+                                    null, new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE}, true, null, null, null, null),
+                            REQ_ACCPICK);
+                }
+            }
             return;
         }
         if(!((MainNavigationDrawer) getActivity()).isOnline()) {
@@ -337,6 +401,14 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
                                     public void onClick(DialogInterface dialog, int whichButton) {
 
                                         emailStr = edittext.getText().toString();
+
+                                        String[] lines = emailStr.split("@");
+                                        if(lines.length != 2 || !lines[1].startsWith("gmail")){
+                                            Snackbar snackbar = Snackbar
+                                                    .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.error_email), Snackbar.LENGTH_LONG);
+                                            snackbar.show();
+                                            return;
+                                        }
                                         Lesson les = lis1.get(which);
                                         final String fileCode = les.driveFileId;
                                         Log.d(TAG, fileCode);
@@ -478,6 +550,14 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
                     public void onClick(DialogInterface dialog, int whichButton) {
 
                         emailStr = edittext.getText().toString();
+                        String[] lines = emailStr.split("@");
+                        if(lines.length != 2 || !lines[1].startsWith("gmail")){
+                            Snackbar snackbar = Snackbar
+                                    .make(getActivity().findViewById(R.id.main_coord_layout), getResources().getString(R.string.error_email), Snackbar.LENGTH_LONG);
+                            snackbar.show();
+                            return;
+                        }
+
                         new AsyncTask<Void, String, Boolean>() {
                             @Override
                             protected void onPreExecute() {

@@ -1,5 +1,7 @@
 package edu.amd.spbstu.polystudenttimetable;
 
+import com.google.gson.annotations.SerializedName;
+
 import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
 
@@ -29,28 +31,46 @@ public class RegLessonInstance implements Serializable{
         return new Homework(this);
     }
 
-    public class Homework implements Serializable{
+    public static class Homework implements Serializable{
+
+        public Homework() {
+            m_task = "";
+            this.m_lesson = null;
+        }
+
         public Homework(RegLessonInstance lesson) {
             m_task = "";
             this.m_lesson = lesson;
         }
 
+        @SerializedName("Task")
         public String m_task;
-        public RegLessonInstance m_lesson;
+        @SerializedName("Parent Lesson")
+        public transient RegLessonInstance m_lesson;
     }
+    @SerializedName("Parent")
+    public transient Lesson parent;
 
-    public Lesson parent;
-
+    @SerializedName("Day Number")
     public int      m_day;  // 0, 1, 2, 3, 4, 5
+    @SerializedName("Type")
     public int      m_type;  // 0, 1, 2
+    @SerializedName("Start Time")
     public String   m_timeStart;
+    @SerializedName("End Time")
     public String   m_timeEnd;
+    @SerializedName("Room Name")
     public String   m_roomName;
+    @SerializedName("Building Name")
     public String   m_buildingName;
+    @SerializedName("Weekly")
     public weekly_t m_weekly;
 
+    @SerializedName("Canceled instances")
     public Map<LocalDate, Boolean> m_isCanceled;
+    @SerializedName("Important instances")
     public Map<LocalDate, Boolean> m_isImportant;
+    @SerializedName("Homeworks")
     public Map<LocalDate, Homework> m_homework;
 
     public RegLessonInstance(Lesson lesson)

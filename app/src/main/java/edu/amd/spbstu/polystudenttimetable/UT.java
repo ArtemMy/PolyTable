@@ -27,6 +27,7 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -36,7 +37,7 @@ final class UT {  private UT() {}
 
     private static final String L_TAG = "polytable_log";
 
-    static final String MYROOT = "DEMORoot";
+    static final String MYROOT = "PolyTable";
     static final String MIME_TEXT = "text/plain";
     static final String MIME_FLDR = "application/vnd.google-apps.folder";
 
@@ -75,7 +76,14 @@ final class UT {  private UT() {}
 
     private static File cchFile(String flNm) {
         File cche = UT.acx.getExternalCacheDir();
-        return (cche == null || flNm == null) ? null : new File(cche.getPath() + File.separator + flNm);
+//        return (cche == null || flNm == null) ? null : new File(cche.getPath() + File.separator + flNm);
+        try {
+            return (cche == null || flNm == null) ? null : File.createTempFile(flNm, null, cche);
+        }
+        catch (IOException e) {
+            Log.d(L_TAG, e.getMessage());
+            return null;
+        }
     }
     static File str2File(String str, String name) {
         if (str == null) return null;
@@ -98,8 +106,12 @@ final class UT {  private UT() {}
         return fl;
     }
     static File byte2File(byte[] buf, String name) {
+        if(buf == null)
+            Log.d(L_TAG, "buf null");
         if (buf == null) return null;
         File fl = cchFile(name);
+        if(fl == null)
+            Log.d(L_TAG, "fl null");
         if (fl == null) return null;
         BufferedOutputStream bs = null;
         try {

@@ -8,6 +8,14 @@ import java.util.Map;
 
 public class StaticStorage implements Serializable
 {
+    public static int[] lesColor = {R.color.color0,
+            R.color.color1,
+            R.color.color2,
+            R.color.color3,
+            R.color.color4,
+            R.color.color5};
+
+
     public static Map<Integer, Group>  m_recentGroups = new LinkedHashMap<Integer, Group>() {
         @Override
         protected boolean removeEldestEntry(Map.Entry<Integer, Group> eldest)

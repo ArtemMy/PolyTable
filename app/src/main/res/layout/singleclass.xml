@@ -14,7 +14,7 @@
         android:clickable="true"
         android:foreground="?android:attr/selectableItemBackground"
         card_view:cardUseCompatPadding="true"
-        card_view:elevation = "2.0dp"
+        card_view:elevation = "20.0dp"
         card_view:cardCornerRadius="3dp">
 
         <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
